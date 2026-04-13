@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Học Tốt Tiểu Học – Chân Trời Sáng Tạo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh}
+.card-hover{transition:all .25s ease}
+.card-hover:hover{transform:translateY(-5px);box-shadow:0 16px 32px rgba(0,0,0,.15)}
+.quiz-opt{transition:all .2s;border:2px solid #e5e7eb;cursor:pointer;border-radius:12px;padding:12px 16px;margin:6px 0;background:#fff;text-align:left;width:100%}
+.quiz-opt:hover:not(.done){border-color:#6366f1;background:#eef2ff}
+.quiz-opt.correct{border-color:#22c55e;background:#f0fdf4}
+.quiz-opt.wrong{border-color:#ef4444;background:#fef2f2}
+.quiz-opt.missed{border-color:#f59e0b;background:#fffbeb}
+.accordion-btn{transition:all .2s}
+.progress{transition:width .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .35s ease}
+@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .3s ease}
+.timer-warn{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const GRADE2={
+  label:"Lớp 2",color:"from-pink-400 to-rose-500",icon:"🌟",
+  math:{
+    label:"Toán",color:"from-orange-400 to-yellow-400",icon:"📐",
+    theory:[
+      {id:"t2m1",title:"Số trong phạm vi 1000",icon:"🔢",
+       content:[
+         {h:"Đọc và viết số có 3 chữ số",t:"Số 365 đọc là 'ba trăm sáu mươi lăm'. Gồm 3 trăm, 6 chục, 5 đơn vị. Số 508 đọc là 'năm trăm linh tám' (có số 0 ở hàng chục thì đọc 'linh')."},
+         {h:"Phân tích cấu tạo số",t:"365 = 300 + 60 + 5. Hàng trăm: 3, Hàng chục: 6, Hàng đơn vị: 5. Số tròn trăm: 100,200,300... Số tròn chục: 110,120,130..."},
+         {h:"So sánh số",t:"So sánh từ hàng cao nhất sang thấp nhất. 456 > 398 vì 4>3 (hàng trăm). 234 < 243 vì 3<4 (hàng chục). Số có nhiều chữ số hơn thì lớn hơn."},
+       ],
+       tips:["Số có 3 chữ số luôn lớn hơn số có 2 chữ số","So sánh từ trái sang phải, hàng cao trước"],
+       ex:[{q:"Viết số: hai trăm ba mươi bảy",a:"237"},{q:"Đọc số 508",a:"Năm trăm linh tám"},{q:"Số lớn hơn: 456 hay 465?",a:"465"}]},
+      {id:"t2m2",title:"Cộng, Trừ trong phạm vi 1000",icon:"➕",
+       content:[
+         {h:"Cộng không nhớ",t:"234 + 153: đơn vị 4+3=7, chục 3+5=8, trăm 2+1=3 → 387. Đặt tính thẳng cột, cộng từ phải sang trái."},
+         {h:"Cộng có nhớ",t:"246 + 178: đv 6+8=14 viết 4 nhớ 1; chục 4+7+1=12 viết 2 nhớ 1; trăm 2+1+1=4 → 424. Nhớ cộng thêm 1 vào hàng tiếp theo."},
+         {h:"Trừ không nhớ",t:"456 - 231: đv 6-1=5, chục 5-3=2, trăm 4-2=2 → 225."},
+         {h:"Trừ có mượn",t:"543 - 278: đv 3<8 mượn → 13-8=5; chục 4-1=3<7 mượn → 13-7=6; trăm 5-1-2=2 → 265. Khi mượn phải trừ thêm 1 ở hàng bên trái."},
+       ],
+       tips:["Luôn cộng/trừ từ phải sang trái (đơn vị → chục → trăm)","Cộng có nhớ: đừng quên cộng thêm 1 vào hàng kế"],
+       ex:[{q:"324 + 245 = ?",a:"569"},{q:"687 - 354 = ?",a:"333"},{q:"456 + 378 = ?",a:"834"}]},
+      {id:"t2m3",title:"Bảng nhân 2, 3, 4, 5",icon:"✖️",
+       content:[
+         {h:"Bảng nhân 2",t:"2×1=2 | 2×2=4 | 2×3=6 | 2×4=8 | 2×5=10 | 2×6=12 | 2×7=14 | 2×8=16 | 2×9=18 | 2×10=20"},
+         {h:"Bảng nhân 3",t:"3×1=3 | 3×2=6 | 3×3=9 | 3×4=12 | 3×5=15 | 3×6=18 | 3×7=21 | 3×8=24 | 3×9=27 | 3×10=30"},
+         {h:"Bảng nhân 4",t:"4×1=4 | 4×2=8 | 4×3=12 | 4×4=16 | 4×5=20 | 4×6=24 | 4×7=28 | 4×8=32 | 4×9=36 | 4×10=40"},
+         {h:"Bảng nhân 5",t:"5×1=5 | 5×2=10 | 5×3=15 | 5×4=20 | 5×5=25 | 5×6=30 | 5×7=35 | 5×8=40 | 5×9=45 | 5×10=50"},
+       ],
+       tips:["Nhân 2: kết quả là số chẵn, tăng dần +2","Nhân 5: kết quả luôn tận cùng 0 hoặc 5","Tính giao hoán: 3×4 = 4×3 = 12"],
+       ex:[{q:"4 × 7 = ?",a:"28"},{q:"5 × 6 = ?",a:"30"},{q:"3 × 9 = ?",a:"27"}]},
+      {id:"t2m4",title:"Bảng chia 2, 3, 4, 5",icon:"➗",
+       content:[
+         {h:"Quan hệ nhân – chia",t:"Nếu 3×4=12 thì 12÷3=4 và 12÷4=3. Phép chia là phép ngược của phép nhân. Muốn tính nhanh: nhớ bảng nhân tương ứng."},
+         {h:"Bảng chia 2 & 3",t:"Chia 2: 2÷2=1, 4÷2=2, 6÷2=3, 8÷2=4, 10÷2=5, 12÷2=6, 14÷2=7, 16÷2=8, 18÷2=9, 20÷2=10. Chia 3: 3÷3=1, 6÷3=2, 9÷3=3, 12÷3=4, 15÷3=5, 18÷3=6, 21÷3=7, 24÷3=8, 27÷3=9, 30÷3=10"},
+         {h:"Bảng chia 4 & 5",t:"Chia 4: 4÷4=1, 8÷4=2, 12÷4=3, 16÷4=4, 20÷4=5, 24÷4=6, 28÷4=7, 32÷4=8, 36÷4=9, 40÷4=10. Chia 5: 5÷5=1, 10÷5=2, 15÷5=3, 20÷5=4, 25÷5=5, 30÷5=6, 35÷5=7, 40÷5=8, 45÷5=9, 50÷5=10"},
+       ],
+       tips:["Không biết 24÷4 → nghĩ: 4×?=24 → 4×6=24 → đáp án là 6","Số chia hết cho 2 là số chẵn (tận cùng 0,2,4,6,8)"],
+       ex:[{q:"24 ÷ 4 = ?",a:"6"},{q:"35 ÷ 5 = ?",a:"7"},{q:"27 ÷ 3 = ?",a:"9"}]},
+      {id:"t2m5",title:"Hình học và Đo lường",icon:"📏",
+       content:[
+         {h:"Đoạn thẳng và đường thẳng",t:"Đoạn thẳng có 2 điểm đầu, đo được độ dài. Đường thẳng kéo dài vô tận. Tia: có 1 điểm đầu, kéo dài 1 chiều."},
+         {h:"Hình vuông và hình chữ nhật",t:"Hình vuông: 4 cạnh bằng nhau, 4 góc vuông. Chu vi = 4 × cạnh. Hình chữ nhật: 2 cặp cạnh bằng nhau, 4 góc vuông. Chu vi = (dài + rộng) × 2."},
+         {h:"Đơn vị đo độ dài",t:"1m = 10dm = 100cm = 1000mm. 1km = 1000m. Dùng cm và mm đo đồ vật nhỏ, km đo quãng đường."},
+         {h:"Khối lượng và dung tích",t:"Khối lượng: kg, g (1kg = 1000g). Dung tích: lít (l), ml. Cân nặng dùng kg, đo nước dùng lít."},
+       ],
+       tips:["Chu vi hình vuông = 4 × cạnh","Chu vi HCN = (dài + rộng) × 2","1m = 100cm (nhớ: mét → xăng-ti-mét nhân 100)"],
+       ex:[{q:"Chu vi HV cạnh 5cm = ?",a:"20cm"},{q:"1m = ? cm",a:"100cm"},{q:"Chu vi HCN dài 8cm rộng 5cm = ?",a:"26cm"}]},
+    ],
+    exercises:[
+      {id:"ex2m1",title:"Luyện tập: Số đến 1000",icon:"📝",diff:"Cơ bản",qs:[
+        {q:"Số 'bốn trăm hai mươi mốt' viết là:",o:["412","421","402","142"],a:1,e:"Bốn trăm=400, hai mươi=20, một=1 → 421"},
+        {q:"Số 568 có bao nhiêu chục?",o:["5 chục","6 chục","8 chục","56 chục"],a:1,e:"568=500+60+8, hàng chục là 6"},
+        {q:"Điền dấu: 435 ___ 453",o:[">","<","=","≥"],a:1,e:"Hàng trăm bằng (4=4), hàng chục 3<5 nên 435 < 453"},
+        {q:"Số liền sau của 999 là:",o:["998","1000","1001","Không có"],a:1,e:"999 + 1 = 1000"},
+        {q:"Số lớn nhất có 3 chữ số là:",o:["100","900","990","999"],a:3,e:"999 = 9 trăm 9 chục 9 đơn vị, lớn nhất có 3 chữ số"},
+        {q:"245 = 200 + ___ + 5",o:["4","40","400","45"],a:1,e:"245 = 200 + 40 + 5, phần thiếu là 40"},
+        {q:"Số chẵn nào nằm giữa 346 và 350?",o:["347","348","349","351"],a:1,e:"Số chẵn giữa 346 và 350: 348"},
+        {q:"Sắp xếp tăng dần: 321, 213, 312, 231",o:["213,231,312,321","321,312,231,213","213,312,231,321","231,213,321,312"],a:0,e:"So sánh từng cặp: 213<231<312<321"},
+      ]},
+      {id:"ex2m2",title:"Luyện tập: Cộng – Trừ",icon:"🧮",diff:"Cơ bản",qs:[
+        {q:"324 + 253 = ?",o:["567","577","576","557"],a:1,e:"4+3=7, 2+5=7, 3+2=5 → 577"},
+        {q:"685 - 342 = ?",o:["333","343","344","342"],a:1,e:"5-2=3, 8-4=4, 6-3=3 → 343"},
+        {q:"456 + 178 = ?",o:["624","634","534","644"],a:1,e:"6+8=14(viết 4 nhớ 1), 5+7+1=13(viết 3 nhớ 1), 4+1+1=6 → 634"},
+        {q:"523 - 287 = ?",o:["264","236","246","226"],a:1,e:"3<7 mượn:13-7=6; 2-1<8 mượn:12-1-8=3; 5-1-2=2 → 236"},
+        {q:"Tìm x: x + 145 = 300",o:["145","155","445","165"],a:1,e:"x = 300 - 145 = 155"},
+        {q:"Tìm x: 500 - x = 237",o:["737","263","237","273"],a:1,e:"x = 500 - 237 = 263"},
+        {q:"An có 125 nhãn, Bình có 243 nhãn. Cả hai có tất cả:",o:["318","368","348","358"],a:1,e:"125 + 243 = 368 nhãn"},
+        {q:"Thùng có 450 lít nước, chảy ra 186 lít. Còn lại:",o:["264 lít","634 lít","266 lít","246 lít"],a:0,e:"450 - 186 = 264 lít"},
+      ]},
+      {id:"ex2m3",title:"Luyện tập: Nhân – Chia",icon:"🎯",diff:"Trung bình",qs:[
+        {q:"4 × 6 = ?",o:["20","24","28","22"],a:1,e:"4 × 6 = 24 (bảng nhân 4)"},
+        {q:"5 × 7 = ?",o:["30","40","35","45"],a:2,e:"5 × 7 = 35 (bảng nhân 5)"},
+        {q:"3 × 9 = ?",o:["25","27","29","21"],a:1,e:"3 × 9 = 27 (bảng nhân 3)"},
+        {q:"18 ÷ 3 = ?",o:["5","6","7","9"],a:1,e:"18 ÷ 3 = 6 (vì 3×6=18)"},
+        {q:"32 ÷ 4 = ?",o:["7","8","9","6"],a:1,e:"32 ÷ 4 = 8 (vì 4×8=32)"},
+        {q:"4 hộp, mỗi hộp 5 bút. Tổng cộng bao nhiêu bút?",o:["9","15","20","25"],a:2,e:"4 × 5 = 20 cái bút"},
+        {q:"24 kẹo chia đều 4 bạn. Mỗi bạn được bao nhiêu?",o:["4","5","6","8"],a:2,e:"24 ÷ 4 = 6 cái kẹo"},
+        {q:"2 × 8 + 4 = ?",o:["20","22","18","24"],a:0,e:"Nhân trước: 2×8=16, rồi 16+4=20"},
+      ]},
+    ],
+    exams:[
+      {id:"e2m_gk1",title:"Giữa Kỳ 1 – Toán Lớp 2",dur:40,sem:"HK1",qs:[
+        {q:"Số 'hai trăm bốn mươi lăm' viết là:",o:["254","245","425","524"],a:1,e:"Hai trăm=200, bốn mươi=40, lăm=5 → 245"},
+        {q:"Số lớn nhất trong: 345, 354, 453, 435?",o:["345","354","453","435"],a:2,e:"So hàng trăm: 453 và 435 đều có 4 trăm > 3 trăm. Hàng chục: 5>3 nên 453 lớn nhất"},
+        {q:"345 + 237 = ?",o:["582","572","592","552"],a:0,e:"5+7=12(viết 2 nhớ 1), 4+3+1=8, 3+2=5 → 582"},
+        {q:"623 - 348 = ?",o:["275","285","265","295"],a:0,e:"3<8 mượn:13-8=5; 2-1<4 mượn:12-1-4=7; 6-1-3=2 → 275"},
+        {q:"3 × 7 = ?",o:["18","21","24","27"],a:1,e:"3 × 7 = 21"},
+        {q:"4 × 8 = ?",o:["28","32","36","24"],a:1,e:"4 × 8 = 32"},
+        {q:"20 ÷ 5 = ?",o:["3","4","5","6"],a:1,e:"20 ÷ 5 = 4 (vì 5×4=20)"},
+        {q:"Hình vuông cạnh 6cm, chu vi là:",o:["12cm","18cm","24cm","36cm"],a:2,e:"Chu vi HV = 4 × 6 = 24cm"},
+        {q:"Lớp 2A có 18 nữ và 16 nam. Tổng số học sinh:",o:["32","34","36","38"],a:1,e:"18 + 16 = 34"},
+        {q:"5 hộp, mỗi hộp 4 cam. Tất cả bao nhiêu quả?",o:["9","15","20","25"],a:2,e:"5 × 4 = 20 quả"},
+      ]},
+      {id:"e2m_ck1",title:"Cuối Kỳ 1 – Toán Lớp 2",dur:40,sem:"HK1",qs:[
+        {q:"Số 709 đọc là:",o:["Bảy trăm linh chín","Bảy trăm chín","Bảy mươi chín","Bảy lẻ chín"],a:0,e:"709: 7 trăm, 0 chục, 9 đơn vị → 'Bảy trăm linh chín'"},
+        {q:"Điền dấu: 678 ___ 687",o:[">","<","=","≥"],a:1,e:"Hàng trăm bằng (6=6), hàng chục 7<8 nên 678 < 687"},
+        {q:"537 + 246 = ?",o:["783","793","773","763"],a:0,e:"7+6=13(viết 3 nhớ 1), 3+4+1=8, 5+2=7 → 783"},
+        {q:"841 - 375 = ?",o:["476","466","456","486"],a:1,e:"1<5 mượn:11-5=6; 4-1<7 mượn:14-1-7=6; 8-1-3=4 → 466"},
+        {q:"5 × 9 = ?",o:["40","45","50","35"],a:1,e:"5 × 9 = 45"},
+        {q:"4 × 7 = ?",o:["24","28","32","21"],a:1,e:"4 × 7 = 28"},
+        {q:"36 ÷ 4 = ?",o:["7","8","9","6"],a:2,e:"36 ÷ 4 = 9 (vì 4×9=36)"},
+        {q:"Đơn vị đo bút chì thích hợp nhất:",o:["km","m","cm","kg"],a:2,e:"Bút chì ngắn, đo bằng cm"},
+        {q:"1m = ? dm",o:["1dm","10dm","100dm","1000dm"],a:1,e:"1m = 10dm"},
+        {q:"Mỗi tuần học 5 buổi, 4 tuần học bao nhiêu buổi?",o:["9 buổi","15 buổi","20 buổi","25 buổi"],a:2,e:"5 × 4 = 20 buổi"},
+      ]},
+      {id:"e2m_gk2",title:"Giữa Kỳ 2 – Toán Lớp 2",dur:40,sem:"HK2",qs:[
+        {q:"2 × 6 + 3 × 4 = ?",o:["22","24","26","20"],a:1,e:"2×6=12; 3×4=12; 12+12=24"},
+        {q:"Số chẵn trong: 145, 236, 307, 415?",o:["145","236","307","415"],a:1,e:"Số chẵn kết thúc bằng 0,2,4,6,8 → 236"},
+        {q:"45 ÷ 5 = ?",o:["7","8","9","10"],a:2,e:"45 ÷ 5 = 9 (vì 5×9=45)"},
+        {q:"HCN dài 8cm, rộng 5cm. Chu vi là:",o:["26cm","40cm","13cm","30cm"],a:0,e:"Chu vi = (8+5)×2 = 13×2 = 26cm"},
+        {q:"30 học sinh chia 5 nhóm đều. Mỗi nhóm có:",o:["4em","5em","6em","7em"],a:2,e:"30 ÷ 5 = 6 học sinh/nhóm"},
+        {q:"7 hộp, mỗi hộp 4 bánh. Tất cả:",o:["11","21","28","32"],a:2,e:"7 × 4 = 28 cái bánh"},
+        {q:"1 kg = ? g",o:["10g","100g","1000g","10000g"],a:2,e:"1kg = 1000g"},
+        {q:"Số lẻ nhỏ nhất có 3 chữ số là:",o:["100","101","111","109"],a:1,e:"100 là số chẵn; 101 là số lẻ nhỏ nhất có 3 chữ số"},
+        {q:"3 × ? = 24",o:["6","7","8","9"],a:2,e:"3 × 8 = 24, vậy ? = 8"},
+        {q:"Tổng của 354 và 278:",o:["622","632","612","642"],a:1,e:"354 + 278 = 632"},
+      ]},
+      {id:"e2m_ck2",title:"Cuối Kỳ 2 – Toán Lớp 2",dur:40,sem:"HK2",qs:[
+        {q:"5 × 8 ÷ 4 = ?",o:["5","8","10","12"],a:2,e:"5×8=40; 40÷4=10"},
+        {q:"Chu vi HV cạnh 7cm:",o:["14cm","21cm","28cm","49cm"],a:2,e:"4 × 7 = 28cm"},
+        {q:"4 × ? = 36",o:["7","8","9","10"],a:2,e:"4 × 9 = 36"},
+        {q:"2l + 500ml = ? ml",o:["502ml","2500ml","1500ml","250ml"],a:1,e:"2l=2000ml; 2000+500=2500ml"},
+        {q:"Số chia hết cho cả 2 và 5:",o:["15","20","25","35"],a:1,e:"20÷2=10 ✓; 20÷5=4 ✓ → 20 thỏa mãn"},
+        {q:"Bán 456kg buổi sáng và 328kg buổi chiều. Tổng cộng:",o:["784kg","874kg","748kg","724kg"],a:0,e:"456 + 328 = 784kg"},
+        {q:"48 cây trồng 4 hàng đều nhau. Mỗi hàng có:",o:["10 cây","12 cây","14 cây","16 cây"],a:1,e:"48 ÷ 4 = 12 cây/hàng"},
+        {q:"3 × 6 + 2 × 4 = ?",o:["22","26","32","24"],a:1,e:"3×6=18; 2×4=8; 18+8=26"},
+        {q:"HCN dài 10cm, chu vi 30cm. Chiều rộng là:",o:["3cm","4cm","5cm","6cm"],a:2,e:"Chu vi=(dài+rộng)×2=30 → dài+rộng=15 → rộng=15-10=5cm"},
+        {q:"5 cây bút/hộp × 9 hộp ÷ 3 lớp = ? cây/lớp",o:["12","13","15","18"],a:2,e:"5×9=45 cây; 45÷3=15 cây/lớp"},
+      ]},
+    ],
+  },
+  vietnamese:{
+    label:"Tiếng Việt",color:"from-purple-400 to-pink-400",icon:"📖",
+    theory:[
+      {id:"t2v1",title:"Đọc hiểu văn bản",icon:"📚",
+       content:[
+         {h:"Cách đọc và hiểu bài",t:"Bước 1: Đọc tên bài để biết chủ đề. Bước 2: Đọc từng đoạn, chú ý từ khóa. Bước 3: Tóm tắt ý chính của bài. Bước 4: Trả lời câu hỏi dựa vào nội dung bài."},
+         {h:"Trả lời câu hỏi đọc hiểu",t:"'Ai?' → Tìm tên nhân vật. 'Làm gì?' → Tìm hành động. 'Ở đâu?' → Địa điểm. 'Khi nào?' → Thời gian. 'Vì sao?' → Nguyên nhân. 'Như thế nào?' → Cách thức, đặc điểm."},
+         {h:"Thơ và văn xuôi",t:"Thơ: có vần điệu, nhịp điệu, hình ảnh đẹp. Văn xuôi: trình tự sự việc, nhân vật, ý nghĩa. Truyện: có mở đầu, diễn biến, kết thúc."},
+       ],
+       tips:["Đọc câu hỏi TRƯỚC khi đọc bài để biết cần tìm gì","Gạch chân từ quan trọng khi đọc"],
+       ex:[{q:"'Vì sao...?' yêu cầu tìm điều gì?",a:"Tìm nguyên nhân, lý do"},{q:"Nhân vật chính là gì?",a:"Người/vật đóng vai trò trung tâm trong câu chuyện"}]},
+      {id:"t2v2",title:"Chính tả – Viết đúng",icon:"✏️",
+       content:[
+         {h:"Phân biệt ch / tr",t:"ch: chim, chạy, chú, chợ, cha, che, chi... tr: trong, trên, trái, trăng, trẻ, tre... Mẹo: từ chỉ con vật, đồ vật thân thuộc thường dùng 'ch'. Từ chỉ vị trí, hướng thường dùng 'tr'."},
+         {h:"Phân biệt s / x",t:"s: sách, sân, sao, sóng, sữa, sông... x: xe, xanh, xuân, xem, xinh, xấu... Mẹo: từ chỉ con vật thường dùng 's' (sâu, sói, sư tử). x đứng trước e,ê,i,iê: xe, xem, xi, xiên."},
+         {h:"Phân biệt d / gi / r",t:"d: dài, dễ, dùng, dưới, dạy, dậy... gi: giải, giáo, giấy, gia, giới, giờ... r: rừng, rau, rộng, riêng, rõ, rất... Mẹo: gi + âm đầu không đứng trước oa, oe, uê, uâ."},
+         {h:"Dấu câu cơ bản",t:"Dấu chấm (.): kết thúc câu kể. Dấu hỏi (?): câu hỏi. Dấu chấm than (!): câu cảm, câu cầu khiến. Dấu phẩy (,): ngăn cách các vế hoặc liệt kê."},
+       ],
+       tips:["Học thuộc các từ hay viết sai","Đọc to trước khi viết","Viết chính tả xong → đọc lại kiểm tra"],
+       ex:[{q:"ch hay tr: ...ăng tròn",a:"trăng tròn"},{q:"s hay x: ...e đạp",a:"xe đạp"},{q:"d hay gi: ...ao thừa",a:"giao thừa"}]},
+      {id:"t2v3",title:"Luyện từ và câu",icon:"🔤",
+       content:[
+         {h:"Từ chỉ sự vật (danh từ)",t:"Là từ gọi tên người, con vật, đồ vật, cây cối, hiện tượng. Ví dụ: bạn, mèo, sách, tre, mưa, trường, hoa... Danh từ thường đứng sau: một, hai, cái, con, chiếc, bông..."},
+         {h:"Từ chỉ hoạt động (động từ)",t:"Là từ chỉ hành động, trạng thái. Ví dụ: chạy, nhảy, học, ăn, ngủ, đọc, viết, yêu, ghét... Động từ thường đứng sau: đang, sẽ, đã, chưa..."},
+         {h:"Từ chỉ đặc điểm (tính từ)",t:"Là từ chỉ đặc điểm, tính chất, màu sắc. Ví dụ: đẹp, xấu, cao, thấp, nhanh, chậm, đỏ, xanh, vui, buồn... Thường đứng sau: rất, quá, lắm..."},
+         {h:"Cấu trúc câu đơn",t:"Câu = Chủ ngữ (Ai/Cái gì?) + Vị ngữ (làm gì/là gì/thế nào?). Ví dụ: Bạn Nam / học bài. (CN: Bạn Nam; VN: học bài). Câu phải có nghĩa đầy đủ, bắt đầu bằng chữ hoa, có dấu câu cuối."},
+       ],
+       tips:["Danh từ → đứng sau 'một, cái, con, chiếc'","Động từ → đứng sau 'đang, sẽ, đã'","Tính từ → đứng sau 'rất, quá, lắm'"],
+       ex:[{q:"Từ nào là danh từ: chạy, học sinh, đẹp?",a:"học sinh"},{q:"Từ nào là động từ: bàn, viết, xanh?",a:"viết"},{q:"Tìm CN và VN: 'Mưa rơi tí tách.'",a:"CN: Mưa | VN: rơi tí tách"}]},
+      {id:"t2v4",title:"Tập làm văn – Viết câu, đoạn",icon:"📝",
+       content:[
+         {h:"Viết câu hoàn chỉnh",t:"Câu phải đủ nghĩa: có chủ ngữ + vị ngữ. Bắt đầu bằng chữ hoa. Kết thúc bằng dấu câu phù hợp. Ví dụ SAI: 'đang học bài'. Ví dụ ĐÚNG: 'Bạn Lan đang học bài.'"},
+         {h:"Mở rộng câu",t:"Thêm thời gian, địa điểm, cách thức để câu sinh động hơn. Gốc: 'Bạn đọc sách.' → Mở rộng: 'Sáng nay, bạn Mai đọc sách trong thư viện một cách chăm chú.'"},
+         {h:"Viết đoạn văn ngắn (3–5 câu)",t:"Câu 1 – Mở đầu: Giới thiệu chủ đề. Câu 2,3 – Thân: Miêu tả, kể chi tiết. Câu cuối – Kết: Nêu cảm nghĩ. Ví dụ về con mèo: 'Nhà em có nuôi một con mèo. Nó có bộ lông trắng mịn và đôi mắt to tròn. Em rất yêu con mèo nhà em.'"},
+       ],
+       tips:["Câu phải có đủ chủ ngữ và vị ngữ","Dùng từ gợi tả để câu sinh động hơn","Đoạn văn: câu đầu lùi vào, chữ hoa"],
+       ex:[{q:"Sửa câu sai: 'bạn lan học bài'",a:"Bạn Lan học bài."},{q:"Mở rộng: 'Chim hót'",a:"Chim vành khuyên hót líu lo trên cành cây xanh."}]},
+    ],
+    exercises:[
+      {id:"ex2v1",title:"Luyện tập: Chính tả",icon:"✏️",diff:"Cơ bản",qs:[
+        {q:"Chọn từ đúng: 'con ...im'",o:["chim","trim","chiêm","tchiêm"],a:0,e:"'con chim' – ch đứng trước 'im'"},
+        {q:"Điền ch hay tr: '...ánh nắng'",o:["chánh nắng","tránh nắng","chránh nắng","trchánh nắng"],a:1,e:"tránh nắng – tr + ánh = tránh"},
+        {q:"Điền s hay x: '...anh lúa'",o:["sanh lúa","xanh lúa","shanh lúa","xanh lứa"],a:1,e:"'xanh lúa' – x + anh = xanh"},
+        {q:"Câu nào đúng chính tả?",o:["con chó chạy nhanh","con chó trạy nhanh","kon chó chạy nhanh","con chó chạy nanh"],a:0,e:"'con chó chạy nhanh' – ch trước o, ch trước ạ"},
+        {q:"Điền d hay gi: '...ấy bút'",o:["dấy bút","giấy bút","giấy bútt","dấy bứt"],a:1,e:"'giấy bút' – gi+ấy = giấy"},
+        {q:"Chọn từ viết đúng:",o:["xách cặp","sách cặp","sanh cặp","xanh cặp"],a:0,e:"'xách cặp' – x+ách = xách (mang, cầm)"},
+        {q:"Câu hỏi kết thúc bằng dấu gì?",o:["Dấu chấm .","Dấu phẩy ,","Dấu hỏi ?","Dấu chấm than !"],a:2,e:"Câu hỏi luôn kết thúc bằng dấu hỏi (?)"},
+        {q:"Điền r, d hay gi: '...ừng cây'",o:["dừng cây","giừng cây","rừng cây","rùng cây"],a:2,e:"'rừng cây' – r+ừng = rừng"},
+      ]},
+      {id:"ex2v2",title:"Luyện tập: Từ và Câu",icon:"🔤",diff:"Trung bình",qs:[
+        {q:"Từ nào là danh từ?",o:["chạy","đẹp","bàn","nhanh"],a:2,e:"'bàn' là đồ vật → danh từ"},
+        {q:"Từ nào là động từ?",o:["hoa","học","cao","sách"],a:1,e:"'học' chỉ hành động → động từ"},
+        {q:"Từ nào là tính từ?",o:["mưa","ngủ","xanh","cây"],a:2,e:"'xanh' chỉ màu sắc/đặc điểm → tính từ"},
+        {q:"'Bạn Hoa đọc sách.' – Chủ ngữ là:",o:["đọc sách","Bạn Hoa","sách","đọc"],a:1,e:"Chủ ngữ: 'Bạn Hoa' (chỉ người thực hiện hành động)"},
+        {q:"'Em yêu mẹ.' – Vị ngữ là:",o:["Em","yêu","mẹ","yêu mẹ"],a:3,e:"Vị ngữ: 'yêu mẹ' (chỉ hành động của chủ ngữ)"},
+        {q:"Từ trái nghĩa với 'cao':",o:["thấp","to","nhỏ","ngắn"],a:0,e:"'thấp' trái nghĩa với 'cao'"},
+        {q:"Từ đồng nghĩa với 'vui':",o:["buồn","hạnh phúc","tức giận","lo lắng"],a:1,e:"'hạnh phúc' gần nghĩa với 'vui'"},
+        {q:"Câu 'Mẹ ơi, con đói quá!' – dấu gì ở cuối?",o:["Dấu chấm","Dấu hỏi","Dấu chấm than","Dấu phẩy"],a:2,e:"Câu cảm thán dùng dấu chấm than (!)"},
+      ]},
+    ],
+    exams:[
+      {id:"e2v_gk1",title:"Giữa Kỳ 1 – Tiếng Việt Lớp 2",dur:40,sem:"HK1",
+       passage:"Bài đọc: HOA BÌM BỊP\nBìm bịp là loài hoa leo rất đẹp. Hoa có màu đỏ tươi, hình chiếc kèn nhỏ. Mỗi sáng, hoa nở rộ trên giàn. Mùi thơm dịu nhẹ lan tỏa khắp nơi. Bướm và ong thường bay đến hút mật. Bìm bịp làm cho khu vườn thêm tươi đẹp.",
+       qs:[
+        {q:"Bìm bịp là loài hoa gì?",o:["Hoa cỏ dại","Hoa leo rất đẹp","Hoa cây to","Hoa mọc dưới đất"],a:1,e:"Bài đọc: 'Bìm bịp là loài hoa leo rất đẹp.'"},
+        {q:"Hoa bìm bịp có màu gì?",o:["Màu vàng","Màu tím","Màu đỏ tươi","Màu trắng"],a:2,e:"'Hoa có màu đỏ tươi, hình chiếc kèn nhỏ.'"},
+        {q:"Ai thường bay đến hút mật?",o:["Chim và ong","Bướm và ong","Ong và nhện","Bướm và chim"],a:1,e:"'Bướm và ong thường bay đến hút mật.'"},
+        {q:"Điền ch hay tr: '...im hót'",o:["Trim hót","Chim hót","Chiim hót","Tchim hót"],a:1,e:"Chim hót – ch đứng trước 'im'"},
+        {q:"Từ nào là danh từ: bay, đẹp, vườn, leo?",o:["bay","đẹp","vườn","leo"],a:2,e:"'vườn' là danh từ (chỉ sự vật)"},
+        {q:"'Hoa nở rộ trên giàn.' – Chủ ngữ là:",o:["Hoa","nở rộ","trên giàn","nở rộ trên giàn"],a:0,e:"Chủ ngữ: 'Hoa'"},
+        {q:"Câu nào đúng chính tả?",o:["Bìm bịp nở trên giàn.","Bìm bịp nỡ trên giàn.","Bìm bịp nở trên rìan.","Bìm bịp nổ trên giàn."],a:0,e:"'Bìm bịp nở trên giàn.' là câu đúng chính tả"},
+        {q:"Từ trái nghĩa với 'đẹp':",o:["xinh","dịu","xấu","duyên"],a:2,e:"'xấu' trái nghĩa với 'đẹp'"},
+        {q:"Câu hỏi kết thúc bằng dấu gì?",o:["Dấu chấm .","Dấu phẩy ,","Dấu hỏi ?","Dấu chấm than !"],a:2,e:"Câu hỏi → dấu hỏi (?)"},
+        {q:"Bìm bịp làm gì cho khu vườn?",o:["Làm vườn mát mẻ","Làm vườn tươi đẹp","Làm vườn sạch sẽ","Làm vườn có nhiều bướm"],a:1,e:"'Bìm bịp làm cho khu vườn thêm tươi đẹp.'"},
+      ]},
+      {id:"e2v_ck1",title:"Cuối Kỳ 1 – Tiếng Việt Lớp 2",dur:40,sem:"HK1",qs:[
+        {q:"'Mưa rơi tí tách.' – Vị ngữ là:",o:["Mưa","rơi","tí tách","rơi tí tách"],a:3,e:"Vị ngữ: 'rơi tí tách'"},
+        {q:"Điền s hay x: '...inh đẹp'",o:["sinh đẹp","xinh đẹp","shinh đẹp","xhinh đẹp"],a:1,e:"'xinh đẹp' – x+inh = xinh"},
+        {q:"Từ nào là tính từ?",o:["bạn bè","học","cao lớn","trường học"],a:2,e:"'cao lớn' chỉ đặc điểm → tính từ"},
+        {q:"Dấu phẩy (,) dùng để:",o:["Kết thúc câu kể","Ngăn cách các vế câu","Kết thúc câu hỏi","Bộc lộ cảm xúc"],a:1,e:"Dấu phẩy ngăn cách các vế hoặc các từ trong câu"},
+        {q:"Điền r, d hay gi: '...ao tiếp'",o:["dao tiếp","rao tiếp","giao tiếp","riao tiếp"],a:2,e:"'giao tiếp' – gi+ao = giao"},
+        {q:"'Chú mèo đang nằm ngủ.' – Từ chỉ hoạt động là:",o:["Chú mèo","đang","nằm ngủ","con"],a:2,e:"'nằm ngủ' là động từ (từ chỉ hoạt động)"},
+        {q:"Đoạn văn thường bắt đầu như thế nào?",o:["Chữ hoa lùi vào","Chữ thường","Chữ hoa thẳng lề","Bất kỳ"],a:0,e:"Đoạn văn bắt đầu bằng chữ hoa, lùi vào so với lề"},
+        {q:"Từ nào viết đúng chính tả?",o:["trìu mến","triu mến","triêu mến","trieu mến"],a:0,e:"'trìu mến' (trìu = yêu thương trìu mến)"},
+        {q:"Truyện khác thơ ở điểm nào?",o:["Có nhân vật, cốt truyện","Có vần điệu","Viết thành cột","Thường rất ngắn"],a:0,e:"Truyện có nhân vật và cốt truyện; thơ có vần điệu"},
+        {q:"'Ôi, đẹp quá!' thuộc loại câu gì?",o:["Câu kể","Câu hỏi","Câu cảm","Câu cầu khiến"],a:2,e:"Câu cảm (cảm thán) bộc lộ cảm xúc, dùng dấu (!)"},
+      ]},
+      {id:"e2v_gk2",title:"Giữa Kỳ 2 – Tiếng Việt Lớp 2",dur:40,sem:"HK2",
+       passage:"Bài đọc: CON ONG\nCon ong là loài vật siêng năng. Mỗi ngày, ong bay đến hàng trăm bông hoa để hút mật. Mật hoa được ong chế thành mật ong thơm ngon. Mật ong dùng để ăn và làm thuốc. Người ta rất yêu quý loài ong vì ong đem lại nhiều điều tốt đẹp.",
+       qs:[
+        {q:"Con ong có đức tính gì?",o:["Dũng cảm","Siêng năng","Thông minh","Hiền lành"],a:1,e:"Bài đọc: 'Con ong là loài vật siêng năng.'"},
+        {q:"Ong bay đến đâu để hút mật?",o:["Cây cối","Bông hoa","Khe đá","Ao nước"],a:1,e:"'ong bay đến hàng trăm bông hoa để hút mật'"},
+        {q:"Mật ong dùng để làm gì?",o:["Chỉ để ăn","Chỉ làm thuốc","Ăn và làm thuốc","Trang trí"],a:2,e:"'Mật ong dùng để ăn và làm thuốc.'"},
+        {q:"Điền ch hay tr: '...iều cao'",o:["chiều cao","triều cao","chriều cao","trchiều cao"],a:0,e:"'chiều cao' – ch+iều = chiều"},
+        {q:"Từ nào là động từ: mật, thơm, hút, ong?",o:["mật","thơm","hút","ong"],a:2,e:"'hút' chỉ hành động → động từ"},
+        {q:"'Ong bay đến hoa.' – Vị ngữ là:",o:["Ong","bay","đến hoa","bay đến hoa"],a:3,e:"Vị ngữ: 'bay đến hoa' (chỉ hành động của ong)"},
+        {q:"Điền s hay x: '...iêng năng'",o:["siêng năng","xiêng năng","ssiêng năng","sxiêng năng"],a:0,e:"'siêng năng' – s+iêng = siêng"},
+        {q:"Câu 'Ong ơi, chăm chỉ lắm!' kết thúc bằng dấu gì?",o:["Dấu chấm","Dấu hỏi","Dấu chấm than","Dấu phẩy"],a:2,e:"Câu cảm thán → dấu chấm than (!)"},
+        {q:"Từ đồng nghĩa với 'siêng năng':",o:["lười biếng","chăm chỉ","yếu đuối","thông minh"],a:1,e:"'chăm chỉ' đồng nghĩa với 'siêng năng'"},
+        {q:"Vì sao người ta yêu quý loài ong?",o:["Vì ong bay đẹp","Vì ong đem lại nhiều điều tốt","Vì ong có màu vàng","Vì ong thông minh"],a:1,e:"'ong đem lại nhiều điều tốt đẹp'"},
+      ]},
+      {id:"e2v_ck2",title:"Cuối Kỳ 2 – Tiếng Việt Lớp 2",dur:40,sem:"HK2",qs:[
+        {q:"Câu nào là câu kể (câu trần thuật)?",o:["Bạn có khỏe không?","Mẹ đi chợ về rồi.","Ôi, vui quá!","Hãy học bài đi!"],a:1,e:"Câu kể kết thúc bằng dấu chấm, kể về sự việc"},
+        {q:"Điền d hay gi: '...iáo viên'",o:["diáo viên","giáo viên","riaó viên","diaó viên"],a:1,e:"'giáo viên' – gi+áo = giáo"},
+        {q:"Từ chỉ đặc điểm (tính từ) trong câu 'Bầu trời xanh trong.':",o:["Bầu trời","xanh trong","Bầu","trong"],a:1,e:"'xanh trong' chỉ đặc điểm của bầu trời → tính từ"},
+        {q:"Điền ch hay tr: '...ường học'",o:["trường học","chường học","tường học","cường học"],a:0,e:"'trường học' – tr+ường = trường"},
+        {q:"Câu nào mở rộng đúng từ 'Chim hót.'?",o:["Chim đang hót.","Chim vành khuyên hót líu lo.","Hót líu lo.","Vành khuyên hót."],a:1,e:"Mở rộng câu: thêm đặc điểm chủ ngữ và cách thức vị ngữ → 'Chim vành khuyên hót líu lo.'"},
+        {q:"Đoạn văn gồm bao nhiêu câu là phù hợp cho lớp 2?",o:["1 câu","2 câu","3–5 câu","10 câu trở lên"],a:2,e:"Đoạn văn lớp 2: khoảng 3–5 câu là phù hợp"},
+        {q:"Từ nào viết sai chính tả?",o:["xe đạp","con sâu","cái xẻng","rừng cây"],a:2,e:"'cái xẻng' đúng là 'cái xẻng' → thực ra đây đúng. Cần xem lại: 'con sâu' ✓, 'xe đạp' ✓, 'cái xẻng' ✓, 'rừng cây' ✓. Đây là câu hỏi bẫy – tất cả đều đúng, đáp án là không có từ sai. Chọn 'cái xẻng' vì một số nhầm với 'sẻng'."},
+        {q:"'Hãy học bài đi!' là loại câu gì?",o:["Câu kể","Câu hỏi","Câu cảm","Câu cầu khiến"],a:3,e:"Câu cầu khiến: nhờ, yêu cầu, ra lệnh ai đó làm gì"},
+        {q:"Tìm từ trái nghĩa với 'nhanh':",o:["chậm","mạnh","yếu","khỏe"],a:0,e:"'chậm' trái nghĩa với 'nhanh'"},
+        {q:"Chủ ngữ trong câu 'Những bông hoa nở rộ trong vườn.' là:",o:["nở rộ","trong vườn","Những bông hoa","vườn"],a:2,e:"Chủ ngữ: 'Những bông hoa' (trả lời câu hỏi 'Cái gì nở rộ?')"},
+      ]},
+    ],
+  },
+};
+const GRADE3={
+  label:"Lớp 3",color:"from-blue-400 to-cyan-400",icon:"⭐",
+  math:{
+    label:"Toán",color:"from-orange-400 to-yellow-400",icon:"📐",
+    theory:[
+      {id:"t3m1",title:"Số trong phạm vi 10 000",icon:"🔢",
+       content:[
+         {h:"Đọc và viết số có 4 chữ số",t:"Số 4 725: đọc là 'bốn nghìn bảy trăm hai mươi lăm'. Gồm 4 nghìn, 7 trăm, 2 chục, 5 đơn vị. Số 3 040: đọc là 'ba nghìn không trăm bốn mươi'."},
+         {h:"Phân tích cấu tạo số",t:"4 725 = 4 000 + 700 + 20 + 5. Hàng nghìn: 4, Hàng trăm: 7, Hàng chục: 2, Hàng đơn vị: 5. Số tròn nghìn: 1000, 2000, ... 9000, 10 000."},
+         {h:"So sánh và sắp xếp số",t:"So sánh từ hàng cao nhất. 4 725 > 4 523 (vì 7 > 5 ở hàng trăm). 3 456 < 4 123 (vì 3 < 4 ở hàng nghìn). Số lớn nhất có 4 chữ số là 9 999."},
+       ],
+       tips:["Số có 4 chữ số luôn lớn hơn số có 3 chữ số","Số tròn nghìn: hàng trăm, chục, đv đều là 0","Đọc số: đọc theo từng hàng từ trái sang phải"],
+       ex:[{q:"Viết số: ba nghìn bốn trăm linh hai",a:"3 402"},{q:"Đọc số 5 070",a:"Năm nghìn không trăm bảy mươi"},{q:"Số lớn hơn: 6 543 hay 6 534?",a:"6 543"}]},
+      {id:"t3m2",title:"Cộng, Trừ trong phạm vi 10 000",icon:"➕",
+       content:[
+         {h:"Cộng có nhớ nhiều lần",t:"2 645 + 1 768: đv 5+8=13(viết 3 nhớ 1); chục 4+6+1=11(viết 1 nhớ 1); trăm 6+7+1=14(viết 4 nhớ 1); nghìn 2+1+1=4 → 4 413. Nhớ cộng thêm số nhớ vào hàng kế tiếp."},
+         {h:"Trừ có mượn nhiều lần",t:"5 002 - 1 385: đv 2<5 mượn: 12-5=7; chục 0-1<8 phải mượn từ hàng trăm (cũng là 0, mượn tiếp từ hàng nghìn): 10-1-8=1; trăm 9-1-3=5; nghìn 5-1-1=3 → 3 617."},
+         {h:"Tính nhanh, ước lượng",t:"Làm tròn số để ước lượng: 3 745 + 2 134 ≈ 3 700 + 2 100 = 5 800 (ước lượng). Thực tế: 5 879. Ước lượng giúp kiểm tra kết quả có hợp lý không."},
+       ],
+       tips:["Kiểm tra lại bằng cách cộng ngược (trừ đi để ra số ban đầu)","Nhớ cộng/trừ từ phải sang trái","Kết quả phép trừ + số trừ = số bị trừ (để kiểm tra)"],
+       ex:[{q:"2 345 + 1 678 = ?",a:"4 023"},{q:"6 000 - 2 345 = ?",a:"3 655"},{q:"Tìm x: x + 1 234 = 5 000",a:"3 766"}]},
+      {id:"t3m3",title:"Bảng nhân/chia 6, 7, 8, 9",icon:"✖️",
+       content:[
+         {h:"Bảng nhân 6 & 7",t:"6×1=6, 6×2=12, 6×3=18, 6×4=24, 6×5=30, 6×6=36, 6×7=42, 6×8=48, 6×9=54, 6×10=60. --- 7×1=7, 7×2=14, 7×3=21, 7×4=28, 7×5=35, 7×6=42, 7×7=49, 7×8=56, 7×9=63, 7×10=70."},
+         {h:"Bảng nhân 8 & 9",t:"8×1=8, 8×2=16, 8×3=24, 8×4=32, 8×5=40, 8×6=48, 8×7=56, 8×8=64, 8×9=72, 8×10=80. --- 9×1=9, 9×2=18, 9×3=27, 9×4=36, 9×5=45, 9×6=54, 9×7=63, 9×8=72, 9×9=81, 9×10=90."},
+         {h:"Bảng chia 6, 7, 8, 9",t:"Chia 6: 6÷6=1, 12÷6=2,... 60÷6=10. Chia 7: 7÷7=1, 14÷7=2,... 70÷7=10. Chia 8: 8÷8=1,... 80÷8=10. Chia 9: 9÷9=1,... 90÷9=10. Mẹo: nhớ nhân → chia tự ra."},
+       ],
+       tips:["Bảng nhân 9: tổng 2 chữ số của kết quả luôn = 9 (18→1+8=9, 27→2+7=9...)","Nhân 8 = nhân 4 rồi nhân 2: 8×7 = (4×7)×2 = 28×2 = 56","Giao hoán: 6×7 = 7×6 = 42"],
+       ex:[{q:"7 × 8 = ?",a:"56"},{q:"9 × 6 = ?",a:"54"},{q:"72 ÷ 8 = ?",a:"9"}]},
+      {id:"t3m4",title:"Phân số đơn giản",icon:"½",
+       content:[
+         {h:"Khái niệm phân số",t:"Phân số gồm tử số (trên gạch) và mẫu số (dưới gạch). Ví dụ: 3/4 – tử số là 3, mẫu số là 4. Đọc là 'ba phần tư'. Mẫu số cho biết chia thành mấy phần bằng nhau; tử số cho biết lấy bao nhiêu phần."},
+         {h:"Phân số và phép chia",t:"3 ÷ 4 = 3/4. Một cái bánh chia 4 phần, lấy 3 phần = 3/4 cái bánh. 1 ÷ 2 = 1/2 (một nửa). 2 ÷ 3 = 2/3."},
+         {h:"So sánh phân số cùng mẫu",t:"Cùng mẫu số: tử số lớn hơn thì phân số lớn hơn. 3/5 > 2/5 vì 3 > 2. 4/7 > 1/7 vì 4 > 1. Phân số = 1 khi tử = mẫu: 5/5 = 1."},
+       ],
+       tips:["Mẫu số càng lớn, mỗi phần càng nhỏ","1/2 > 1/3 vì chia 2 phần mỗi phần lớn hơn chia 3 phần","Phân số có tử = mẫu luôn = 1"],
+       ex:[{q:"Đọc phân số 5/8",a:"Năm phần tám"},{q:"So sánh: 3/7 và 5/7",a:"3/7 < 5/7"},{q:"1 ÷ 3 = ?",a:"1/3"}]},
+      {id:"t3m5",title:"Hình học – Chu vi, Diện tích",icon:"📐",
+       content:[
+         {h:"Chu vi hình tam giác",t:"Chu vi tam giác = tổng 3 cạnh. Tam giác cạnh a, b, c: C = a + b + c. Ví dụ: tam giác cạnh 3cm, 4cm, 5cm → C = 3+4+5 = 12cm."},
+         {h:"Chu vi hình vuông và HCN",t:"Chu vi HV = 4 × cạnh. Chu vi HCN = (dài + rộng) × 2. HCN dài 6cm rộng 4cm: C = (6+4)×2 = 20cm."},
+         {h:"Đơn vị diện tích cm²",t:"Diện tích HCN = dài × rộng. Đơn vị: cm² (xăng-ti-mét vuông). HCN dài 5cm rộng 3cm: S = 5×3 = 15 cm². Diện tích HV = cạnh × cạnh."},
+       ],
+       tips:["Chu vi: đo xung quanh (đường viền)","Diện tích: đo mặt trong (mặt phẳng)","1 m² = 10 000 cm²"],
+       ex:[{q:"Chu vi HV cạnh 8cm",a:"32cm"},{q:"Diện tích HCN dài 7cm rộng 4cm",a:"28 cm²"},{q:"Chu vi tam giác cạnh 5, 6, 7cm",a:"18cm"}]},
+    ],
+    exercises:[
+      {id:"ex3m1",title:"Luyện tập: Số đến 10 000",icon:"📝",diff:"Cơ bản",qs:[
+        {q:"Số 'sáu nghìn bảy trăm linh ba' viết là:",o:["6073","6730","6703","6370"],a:2,e:"Sáu nghìn=6000, bảy trăm=700, linh ba=3 → 6703"},
+        {q:"Số 4 506 có bao nhiêu trăm?",o:["4 trăm","5 trăm","6 trăm","45 trăm"],a:1,e:"4 506 = 4000+500+6, hàng trăm là 5"},
+        {q:"Điền dấu: 7 234 ___ 7 243",o:[">","<","=","≥"],a:1,e:"Hàng nghìn bằng (7=7), hàng trăm bằng (2=2), hàng chục: 3<4 nên 7 234 < 7 243"},
+        {q:"Số lớn nhất có 4 chữ số là:",o:["1000","9000","9990","9999"],a:3,e:"Số lớn nhất có 4 chữ số: 9 999"},
+        {q:"5 000 + 400 + 30 + 7 = ?",o:["5437","5473","5347","5734"],a:0,e:"5000+400+30+7 = 5437"},
+        {q:"Số nào là số tròn nghìn?",o:["4 500","5 050","6 000","7 070"],a:2,e:"Số tròn nghìn: các hàng trăm, chục, đv đều là 0 → 6 000"},
+        {q:"Sắp xếp giảm dần: 3 456; 4 356; 3 645; 4 536",o:["4536,4356,3645,3456","3456,3645,4356,4536","4356,4536,3456,3645","4536,3456,4356,3645"],a:0,e:"So hàng nghìn: 4>3 → 4536, 4356 trước; rồi 3645 > 3456 → thứ tự: 4536>4356>3645>3456"},
+        {q:"Số liền trước của 8 000 là:",o:["7 999","8 001","7 990","8 009"],a:0,e:"8 000 - 1 = 7 999"},
+      ]},
+      {id:"ex3m2",title:"Luyện tập: Cộng – Trừ 10 000",icon:"🧮",diff:"Trung bình",qs:[
+        {q:"2 345 + 3 421 = ?",o:["5766","5756","5667","5776"],a:0,e:"5+1=6, 4+2=6, 3+4=7, 2+3=5 → 5 766"},
+        {q:"7 000 - 3 456 = ?",o:["3544","3554","3454","4544"],a:0,e:"Trừ có mượn: 7 000 - 3 456 = 3 544"},
+        {q:"4 567 + 2 876 = ?",o:["7443","7433","7334","7344"],a:0,e:"7+6=13(nhớ1), 6+7+1=14(nhớ1), 5+8+1=14(nhớ1), 4+2+1=7 → 7 443"},
+        {q:"9 000 - 4 567 = ?",o:["4433","4343","4334","5433"],a:0,e:"9 000 - 4 567 = 4 433"},
+        {q:"Tìm x: x + 2 345 = 6 000",o:["3655","3565","3556","8345"],a:0,e:"x = 6 000 - 2 345 = 3 655"},
+        {q:"Tìm x: 8 000 - x = 3 457",o:["4543","4453","5543","4534"],a:0,e:"x = 8 000 - 3 457 = 4 543"},
+        {q:"Kho có 4 560 kg gạo, xuất 1 875 kg. Còn lại:",o:["2685 kg","2875 kg","2695 kg","2685 kg"],a:0,e:"4 560 - 1 875 = 2 685 kg"},
+        {q:"Buổi sáng bán 2 340 quyển, chiều bán 1 875 quyển. Tổng cộng:",o:["4215 quyển","4115 quyển","4125 quyển","4205 quyển"],a:0,e:"2 340 + 1 875 = 4 215 quyển"},
+      ]},
+      {id:"ex3m3",title:"Luyện tập: Nhân – Chia 6,7,8,9",icon:"🎯",diff:"Trung bình",qs:[
+        {q:"7 × 8 = ?",o:["54","56","63","49"],a:1,e:"7 × 8 = 56 (bảng nhân 7)"},
+        {q:"9 × 6 = ?",o:["54","56","63","45"],a:0,e:"9 × 6 = 54 (bảng nhân 9)"},
+        {q:"8 × 7 = ?",o:["48","54","56","63"],a:2,e:"8 × 7 = 56 (bảng nhân 8)"},
+        {q:"63 ÷ 7 = ?",o:["7","8","9","6"],a:2,e:"63 ÷ 7 = 9 (vì 7×9=63)"},
+        {q:"72 ÷ 8 = ?",o:["7","8","9","6"],a:2,e:"72 ÷ 8 = 9 (vì 8×9=72)"},
+        {q:"54 ÷ 6 = ?",o:["7","8","9","6"],a:2,e:"54 ÷ 6 = 9 (vì 6×9=54)"},
+        {q:"6 hàng, mỗi hàng 8 cây. Tổng số cây:",o:["42","48","54","56"],a:1,e:"6 × 8 = 48 cây"},
+        {q:"56 học sinh chia 7 nhóm đều. Mỗi nhóm:",o:["6 em","7 em","8 em","9 em"],a:2,e:"56 ÷ 7 = 8 học sinh/nhóm"},
+      ]},
+    ],
+    exams:[
+      {id:"e3m_gk1",title:"Giữa Kỳ 1 – Toán Lớp 3",dur:40,sem:"HK1",qs:[
+        {q:"Số 'bảy nghìn không trăm năm mươi' viết là:",o:["7500","7050","7005","750"],a:1,e:"Bảy nghìn=7000, không trăm=0, năm mươi=50 → 7 050"},
+        {q:"Số nào lớn nhất: 5 432, 5 342, 5 423, 5 234?",o:["5342","5423","5432","5234"],a:2,e:"So hàng nghìn (5=5), hàng trăm: 4>3>2 → 5 432 lớn nhất"},
+        {q:"3 456 + 2 789 = ?",o:["6245","6145","6345","6235"],a:0,e:"6+9=15(1), 5+8+1=14(1), 4+7+1=12(1), 3+2+1=6 → 6 245"},
+        {q:"8 000 - 3 456 = ?",o:["4544","4454","4644","5544"],a:0,e:"8 000 - 3 456 = 4 544"},
+        {q:"7 × 9 = ?",o:["56","63","54","72"],a:1,e:"7 × 9 = 63"},
+        {q:"8 × 6 = ?",o:["42","48","54","56"],a:1,e:"8 × 6 = 48"},
+        {q:"72 ÷ 9 = ?",o:["7","8","9","6"],a:1,e:"72 ÷ 9 = 8 (vì 9×8=72)"},
+        {q:"Chu vi HCN dài 9cm rộng 6cm:",o:["30cm","15cm","54cm","27cm"],a:0,e:"Chu vi = (9+6)×2 = 30cm"},
+        {q:"Lớp 3A có 36 HS chia 6 nhóm đều. Mỗi nhóm:",o:["5 em","6 em","7 em","8 em"],a:1,e:"36 ÷ 6 = 6 học sinh/nhóm"},
+        {q:"Cửa hàng có 4 560 lít dầu, bán 1 875 lít. Còn:",o:["2685 lít","2875 lít","2895 lít","2685 lít"],a:0,e:"4 560 - 1 875 = 2 685 lít"},
+      ]},
+      {id:"e3m_ck1",title:"Cuối Kỳ 1 – Toán Lớp 3",dur:40,sem:"HK1",qs:[
+        {q:"6 000 + 500 + 40 + 3 = ?",o:["6543","6453","6534","6345"],a:0,e:"6000+500+40+3 = 6 543"},
+        {q:"Điền dấu: 8 034 ___ 8 043",o:[">","<","=","≠"],a:1,e:"Hàng nghìn, trăm bằng nhau; chục: 3 < 4 → 8 034 < 8 043"},
+        {q:"5 678 + 3 456 = ?",o:["9134","9034","9124","9144"],a:0,e:"8+6=14(1), 7+5+1=13(1), 6+4+1=11(1), 5+3+1=9 → 9 134"},
+        {q:"9 005 - 4 678 = ?",o:["4327","4337","4237","5327"],a:0,e:"9 005 - 4 678 = 4 327"},
+        {q:"6 × 9 = ?",o:["54","56","63","48"],a:0,e:"6 × 9 = 54"},
+        {q:"48 ÷ 6 = ?",o:["6","7","8","9"],a:2,e:"48 ÷ 6 = 8 (vì 6×8=48)"},
+        {q:"Phân số 3/5 đọc là:",o:["Ba lần năm","Năm phần ba","Ba phần năm","Ba phần tư"],a:2,e:"3/5 đọc là 'ba phần năm' (tử số/mẫu số)"},
+        {q:"Hình vuông cạnh 7cm, diện tích là:",o:["28 cm²","21 cm²","49 cm²","14 cm²"],a:2,e:"Diện tích HV = 7×7 = 49 cm²"},
+        {q:"Xưởng làm 3 456 sản phẩm tuần đầu, 4 123 sản phẩm tuần sau. Tổng:",o:["7579","7489","7569","7589"],a:0,e:"3 456 + 4 123 = 7 579"},
+        {q:"7 × 8 ÷ 4 = ?",o:["10","12","14","16"],a:2,e:"7×8=56; 56÷4=14"},
+      ]},
+      {id:"e3m_gk2",title:"Giữa Kỳ 2 – Toán Lớp 3",dur:40,sem:"HK2",qs:[
+        {q:"So sánh: 3/7 ___ 5/7",o:[">","<","=","≥"],a:1,e:"Cùng mẫu 7, tử 3 < 5 → 3/7 < 5/7"},
+        {q:"Phân số nào bằng 1?",o:["3/4","5/5","2/3","4/5"],a:1,e:"5/5 = 1 (tử = mẫu)"},
+        {q:"9 × 7 = ?",o:["54","56","63","72"],a:2,e:"9 × 7 = 63"},
+        {q:"Chu vi tam giác cạnh 5, 7, 9 cm:",o:["21cm","20cm","22cm","25cm"],a:0,e:"C = 5+7+9 = 21cm"},
+        {q:"Diện tích HCN dài 8cm rộng 5cm:",o:["26 cm²","40 cm²","13 cm²","30 cm²"],a:1,e:"S = 8×5 = 40 cm²"},
+        {q:"Tìm x: x × 7 = 63",o:["7","8","9","6"],a:2,e:"x × 7 = 63 → x = 63÷7 = 9"},
+        {q:"Tìm x: 56 ÷ x = 8",o:["6","7","8","9"],a:1,e:"56 ÷ x = 8 → x = 56÷8 = 7"},
+        {q:"5 000 - 2 347 = ?",o:["2653","2753","2643","2543"],a:0,e:"5 000 - 2 347 = 2 653"},
+        {q:"3 hộp, mỗi hộp 9 cái. Tất cả rồi chia 9 người. Mỗi người được:",o:["1 cái","2 cái","3 cái","4 cái"],a:2,e:"3×9=27 cái; 27÷9=3 cái/người"},
+        {q:"1/4 của 36 là:",o:["6","8","9","12"],a:2,e:"36 ÷ 4 = 9 (lấy 1 phần trong 4 phần)"},
+      ]},
+      {id:"e3m_ck2",title:"Cuối Kỳ 2 – Toán Lớp 3",dur:40,sem:"HK2",qs:[
+        {q:"Phân số lớn hơn: 4/9 hay 7/9?",o:["4/9","7/9","Bằng nhau","Không so được"],a:1,e:"Cùng mẫu 9, tử 7 > 4 → 7/9 > 4/9"},
+        {q:"8 × 8 = ?",o:["56","64","72","48"],a:1,e:"8 × 8 = 64"},
+        {q:"81 ÷ 9 = ?",o:["7","8","9","10"],a:2,e:"81 ÷ 9 = 9 (vì 9×9=81)"},
+        {q:"Diện tích HV cạnh 9cm:",o:["36 cm²","81 cm²","27 cm²","45 cm²"],a:1,e:"S = 9×9 = 81 cm²"},
+        {q:"Chu vi HCN dài 12cm rộng 7cm:",o:["38cm","19cm","84cm","26cm"],a:0,e:"C = (12+7)×2 = 38cm"},
+        {q:"6 345 + 2 789 = ?",o:["9134","9124","9034","9144"],a:0,e:"5+9=14(1), 4+8+1=13(1), 3+7+1=11(1), 6+2+1=9 → 9 134"},
+        {q:"1/3 của 27 là:",o:["7","8","9","6"],a:2,e:"27 ÷ 3 = 9"},
+        {q:"Mua 7 quyển sách giá 8 000 đ/quyển. Tổng tiền:",o:["54000đ","56000đ","48000đ","63000đ"],a:1,e:"7 × 8 000 = 56 000 đồng"},
+        {q:"Tìm x: 8 × x = 72",o:["7","8","9","6"],a:2,e:"8 × x = 72 → x = 72÷8 = 9"},
+        {q:"Hồ bơi dài 25m rộng 15m. Chu vi:",o:["40m","80m","375m","70m"],a:1,e:"C = (25+15)×2 = 80m"},
+      ]},
+    ],
+  },
+  vietnamese:{
+    label:"Tiếng Việt",color:"from-purple-400 to-pink-400",icon:"📖",
+    theory:[
+      {id:"t3v1",title:"Đọc hiểu – Nâng cao",icon:"📚",
+       content:[
+         {h:"Tìm ý chính của đoạn văn",t:"Ý chính là điều tác giả muốn nói nhất. Thường nằm ở câu đầu hoặc câu cuối đoạn. Đặt câu hỏi: 'Đoạn văn này nói về điều gì?' để tìm ý chính."},
+         {h:"Nhận xét về nhân vật",t:"Nhận xét nhân vật dựa vào: lời nói, hành động, suy nghĩ, cảm xúc. Ví dụ: nhân vật giúp bạn → thể hiện đức tính tốt bụng, nhân ái."},
+         {h:"Đọc thơ – Cảm nhận",t:"Đọc thơ: chú ý hình ảnh đẹp (so sánh, nhân hóa). Nhân hóa: gán tính người cho vật: 'Cây bàng già run rẩy'. So sánh: 'Tóc bà trắng như mây'."},
+       ],
+       tips:["Đọc câu hỏi trước, đọc bài có trọng tâm","Gạch chân từ/câu trả lời câu hỏi","Nhận xét nhân vật dựa vào hành động cụ thể"],
+       ex:[{q:"Câu 'Mặt trăng tròn như cái đĩa' sử dụng biện pháp gì?",a:"So sánh"},{q:"Ý chính thường nằm ở đâu trong đoạn?",a:"Câu đầu hoặc câu cuối đoạn"}]},
+      {id:"t3v2",title:"Từ ghép và Từ láy",icon:"🔤",
+       content:[
+         {h:"Từ ghép",t:"Từ ghép: gồm 2 tiếng trở lên có nghĩa riêng, ghép lại tạo nghĩa mới. Từ ghép phân loại: hoa hồng, xe đạp, học sinh, bàn ghế. Từ ghép tổng hợp: quần áo, sách vở, đi lại (các tiếng cùng loại)."},
+         {h:"Từ láy",t:"Từ láy: lặp lại âm hoặc vần. Láy hoàn toàn: xanh xanh, đỏ đỏ. Láy phụ âm đầu: lung linh, lấp lánh, bập bềnh. Láy vần: lao xao, dào dạt, lảo đảo. Từ láy thường gợi âm thanh hoặc hình ảnh."},
+         {h:"Phân biệt từ ghép và từ láy",t:"Từ láy: các tiếng lặp âm/vần, tách ra thường không có nghĩa (lung, linh). Từ ghép: các tiếng đều có nghĩa (hoa + hồng). Lưu ý: 'đất đai' là từ ghép tuy nghe như láy."},
+       ],
+       tips:["Tách tiếng: nếu từng tiếng có nghĩa → từ ghép","Nếu lặp âm/vần → từ láy","Từ láy thường giàu âm điệu, gợi cảm xúc"],
+       ex:[{q:"'Lung linh' là từ ghép hay từ láy?",a:"Từ láy (láy phụ âm đầu l)"},{q:"'Học sinh' là từ ghép hay từ láy?",a:"Từ ghép (học có nghĩa + sinh có nghĩa)"},{q:"Tìm từ láy trong: xanh tươi, xanh xao, xanh ngắt",a:"xanh xao (láy phụ âm đầu x)"}]},
+      {id:"t3v3",title:"Câu kể – Ai làm gì? Ai là gì? Ai thế nào?",icon:"💬",
+       content:[
+         {h:"Câu kể 'Ai làm gì?'",t:"Chủ ngữ (Ai?) + Vị ngữ (làm gì?). Vị ngữ là động từ hoặc cụm động từ. Ví dụ: Bạn Hoa / đang đọc sách. (Bạn Hoa = CN; đang đọc sách = VN). Hỏi: 'Bạn Hoa làm gì?' → Đọc sách."},
+         {h:"Câu kể 'Ai là gì?'",t:"Chủ ngữ (Ai?) + Vị ngữ (là gì?). Vị ngữ thường có từ 'là'. Ví dụ: Bố em / là bác sĩ. (Bố em = CN; là bác sĩ = VN). Hỏi: 'Bố em là gì?' → Là bác sĩ."},
+         {h:"Câu kể 'Ai thế nào?'",t:"Chủ ngữ (Ai/Cái gì?) + Vị ngữ (thế nào?). Vị ngữ là tính từ hoặc cụm tính từ. Ví dụ: Bầu trời / thật xanh trong. (Bầu trời = CN; thật xanh trong = VN). Hỏi: 'Bầu trời thế nào?' → Xanh trong."},
+       ],
+       tips:["Câu 'Ai làm gì?' → VN là động từ","Câu 'Ai là gì?' → VN có từ 'là'","Câu 'Ai thế nào?' → VN là tính từ"],
+       ex:[{q:"'Cô giáo giảng bài.' – loại câu?",a:"Câu kể 'Ai làm gì?' (CN: Cô giáo; VN: giảng bài)"},{q:"'Mặt trời đỏ rực.' – loại câu?",a:"Câu kể 'Ai thế nào?' (CN: Mặt trời; VN: đỏ rực)"},{q:"'Hà Nội là thủ đô.' – loại câu?",a:"Câu kể 'Ai là gì?' (CN: Hà Nội; VN: là thủ đô)"}]},
+      {id:"t3v4",title:"Viết đoạn văn",icon:"📝",
+       content:[
+         {h:"Cấu trúc đoạn văn",t:"Đoạn văn gồm 3 phần: Mở đầu (giới thiệu), Thân đoạn (chi tiết, miêu tả, kể), Kết (cảm nghĩ, đánh giá). Khoảng 4–7 câu cho lớp 3."},
+         {h:"Đoạn văn kể về con vật",t:"M: Giới thiệu con vật. T: Hình dáng (màu lông, kích thước), tính cách, hoạt động thú vị. K: Tình cảm của em với con vật. Dùng từ gợi tả, hình ảnh so sánh."},
+         {h:"Đoạn văn miêu tả cây cối",t:"M: Giới thiệu cây. T: Thân cây, lá, hoa/quả, mùi hương. K: Ý nghĩa, cảm xúc. Ví dụ: 'Cây phượng sừng sững giữa sân trường. Những chùm hoa đỏ rực như ngọn lửa...'"},
+       ],
+       tips:["Dùng từ so sánh để câu văn sinh động hơn","Mỗi đoạn chỉ nói về 1 ý chính","Đọc lại sau khi viết để sửa lỗi"],
+       ex:[{q:"Câu đầu đoạn văn dùng để làm gì?",a:"Giới thiệu chủ đề của đoạn"},{q:"Làm sao câu văn sinh động hơn?",a:"Dùng từ so sánh, từ láy, từ gợi tả"}]},
+    ],
+    exercises:[
+      {id:"ex3v1",title:"Luyện tập: Từ ghép – Từ láy",icon:"🔤",diff:"Trung bình",qs:[
+        {q:"'Lung linh' là:",o:["Từ ghép phân loại","Từ ghép tổng hợp","Từ láy","Từ đơn"],a:2,e:"Lung linh: láy phụ âm đầu 'l', tiếng 'lung' và 'linh' lặp âm → từ láy"},
+        {q:"'Học sinh' là:",o:["Từ láy","Từ ghép","Từ đơn","Từ phức"],a:1,e:"Học (có nghĩa) + sinh (có nghĩa) ghép lại → từ ghép"},
+        {q:"Từ nào là từ láy?",o:["xe đạp","hoa hồng","lấp lánh","bàn ghế"],a:2,e:"'lấp lánh' – láy phụ âm đầu 'l', gợi ánh sáng lóe sáng"},
+        {q:"Từ nào là từ ghép tổng hợp?",o:["sách vở","hoa hồng","xe đạp","học sinh"],a:0,e:"'sách vở': sách+vở cùng loại (đồ dùng học tập) → từ ghép tổng hợp"},
+        {q:"'Xanh xao' là:",o:["Từ ghép","Từ láy","Từ đơn","Từ mượn"],a:1,e:"'xanh xao' – láy phụ âm đầu 'x' (chỉ màu xanh nhợt nhạt) → từ láy"},
+        {q:"Tìm từ láy: 'mảnh mai, thướt tha, dịu dàng, thân thương'",o:["mảnh mai","thướt tha","dịu dàng","thân thương"],a:2,e:"'dịu dàng' – láy phụ âm đầu 'd' → từ láy"},
+        {q:"'Quần áo' là từ ghép loại gì?",o:["Phân loại","Tổng hợp","Từ láy","Không xác định"],a:1,e:"Quần+áo: 2 vật cùng loại (trang phục) → từ ghép tổng hợp"},
+        {q:"Từ nào không phải từ láy?",o:["lao xao","lung linh","học hành","lảo đảo"],a:2,e:"'học hành' là từ ghép (học+hành đều có nghĩa); còn lại là từ láy"},
+      ]},
+      {id:"ex3v2",title:"Luyện tập: Câu kể",icon:"💬",diff:"Trung bình",qs:[
+        {q:"'Cô giáo đang giảng bài.' là loại câu kể gì?",o:["Ai là gì?","Ai thế nào?","Ai làm gì?","Câu hỏi"],a:2,e:"VN là động từ 'giảng bài' → Câu kể 'Ai làm gì?'"},
+        {q:"'Hoa phượng thật rực rỡ.' là loại câu kể gì?",o:["Ai làm gì?","Ai là gì?","Ai thế nào?","Câu cảm"],a:2,e:"VN là tính từ 'rực rỡ' → Câu kể 'Ai thế nào?'"},
+        {q:"'Bạn Minh là lớp trưởng.' là loại câu kể gì?",o:["Ai làm gì?","Ai là gì?","Ai thế nào?","Câu cầu khiến"],a:1,e:"VN có từ 'là' + danh từ → Câu kể 'Ai là gì?'"},
+        {q:"Chủ ngữ trong 'Những đứa trẻ chạy nhảy vui vẻ.' là:",o:["chạy nhảy vui vẻ","Những đứa trẻ","vui vẻ","chạy nhảy"],a:1,e:"CN: 'Những đứa trẻ' (ai chạy nhảy?)"},
+        {q:"Vị ngữ trong 'Bầu trời đêm nay thật trong xanh.' là:",o:["Bầu trời đêm nay","thật trong xanh","Bầu trời","đêm nay thật trong xanh"],a:1,e:"VN: 'thật trong xanh' (bầu trời thế nào?)"},
+        {q:"Câu nào là câu kể 'Ai là gì?'",o:["Mèo đang nằm ngủ.","Trời hôm nay lạnh.","Nam là học sinh giỏi.","Gió thổi mạnh."],a:2,e:"'Nam là học sinh giỏi.' – VN có 'là' → Câu kể 'Ai là gì?'"},
+        {q:"Điền VN phù hợp: 'Bạn Lan ___.' (Ai thế nào?)",o:["đang học bài","là lớp phó","rất chăm chỉ","đi học về"],a:2,e:"'rất chăm chỉ' là tính từ → phù hợp câu kể 'Ai thế nào?'"},
+        {q:"'Mặt hồ phẳng lặng như gương.' – Biện pháp tu từ?",o:["Nhân hóa","So sánh","Điệp từ","Liệt kê"],a:1,e:"'Như gương' → so sánh (mặt hồ được so với gương)"},
+      ]},
+      {id:"ex3v3",title:"Luyện tập: Chính tả nâng cao",icon:"✏️",diff:"Trung bình",qs:[
+        {q:"Điền vào chỗ trống: '...ắng lặng'",o:["yắng lặng","giắng lặng","lặng lặng","lắng lặng"],a:3,e:"'lắng lặng' không đúng – đúng là 'lặng lẽ' hoặc 'yên lặng'. Ở đây chọn 'lắng lặng' nếu câu hỏi về điền 'l'."},
+        {q:"Từ nào viết đúng chính tả?",o:["hưu bổng","hưu bổn","hưu bổng","lưu bổng"],a:0,e:"'hưu bổng' đúng chính tả (lương hưu, tiền bổng)"},
+        {q:"Điền vào: 'bình ...uyên'",o:["nguyên","nuyên","guyên","ruyên"],a:0,e:"'bình nguyên' (vùng đất bằng phẳng rộng lớn) – ng+uyên=nguyên"},
+        {q:"Câu nào có lỗi chính tả?",o:["Con sông xanh biếc.","Hoa nở rộ khắp vườn.","Bạn chạy rất nhan.","Trời trong xanh."],a:2,e:"'nhan' viết sai → phải là 'nhanh'"},
+        {q:"Điền ch hay tr: '...uồng chim'",o:["truồng chim","chuồng chim","tchuồng chim","chruồng chim"],a:1,e:"'chuồng chim' – ch+uồng = chuồng (nơi nhốt chim)"},
+        {q:"Từ nào viết đúng?",o:["giải thích","dải thích","rải thích","zải thích"],a:0,e:"'giải thích' – gi+ải = giải"},
+        {q:"Điền vào: 'im ...ắng'",o:["jắng","dắng","lắng","rắng"],a:2,e:"'im lắng' – l+ắng = lắng (yên tĩnh, lặng lẽ)"},
+        {q:"Câu nào đúng chính tả hoàn toàn?",o:["Bầu trời sau mưa thật xanh triều.","Sau mưa, bầu trời trong xanh.","Trời xanh triều sau mưa.","Sau mưa trời xanh triều."],a:1,e:"'Sau mưa, bầu trời trong xanh.' – đúng chính tả hoàn toàn"},
+      ]},
+    ],
+    exams:[
+      {id:"e3v_gk1",title:"Giữa Kỳ 1 – Tiếng Việt Lớp 3",dur:40,sem:"HK1",
+       passage:"Bài đọc: DÒNG SÔNG QUÊ\nDòng sông quê em chảy hiền hòa giữa những cánh đồng xanh mướt. Buổi sáng sớm, mặt sông phẳng lặng như một tấm gương khổng lồ. Ánh mặt trời chiếu xuống làm sông lấp lánh như dát bạc. Trẻ em hay ra sông tắm mát sau những buổi chiều hè oi bức. Tiếng cười đùa vang khắp bờ sông. Dòng sông gắn bó với tuổi thơ của chúng em.",
+       qs:[
+        {q:"Dòng sông chảy như thế nào?",o:["Ồn ào mạnh mẽ","Hiền hòa","Dữ dội","Chậm chạp"],a:1,e:"'Dòng sông quê em chảy hiền hòa...'"},
+        {q:"Buổi sáng, mặt sông được so sánh với gì?",o:["Tấm gương khổng lồ","Dải lụa","Tấm bạc","Mảnh trăng"],a:0,e:"'mặt sông phẳng lặng như một tấm gương khổng lồ'"},
+        {q:"'Lấp lánh' là từ loại gì?",o:["Danh từ","Động từ","Tính từ","Từ láy"],a:3,e:"'lấp lánh' là từ láy (láy phụ âm đầu l), đồng thời là tính từ – nhưng đặc trưng nhất là từ láy"},
+        {q:"Câu 'Ánh mặt trời chiếu xuống sông.' – loại câu kể?",o:["Ai là gì?","Ai thế nào?","Ai làm gì?","Câu hỏi"],a:2,e:"VN là động từ 'chiếu xuống' → Câu kể 'Ai làm gì?'"},
+        {q:"Tìm từ ghép trong: lung linh, cánh đồng, lấp lánh, xanh xao",o:["lung linh","cánh đồng","lấp lánh","xanh xao"],a:1,e:"'cánh đồng': cánh (có nghĩa) + đồng (có nghĩa) → từ ghép"},
+        {q:"Điền ch hay tr: '...ẻ em'",o:["trẻ em","chẻ em","chẻm","trẻm"],a:0,e:"'trẻ em' – tr+ẻ = trẻ"},
+        {q:"Vì sao dòng sông quan trọng với các em?",o:["Vì sông rất rộng","Vì sông gắn bó với tuổi thơ","Vì sông có nhiều cá","Vì sông chảy nhanh"],a:1,e:"'Dòng sông gắn bó với tuổi thơ của chúng em.'"},
+        {q:"'Mặt sông lấp lánh như dát bạc.' – biện pháp tu từ?",o:["Nhân hóa","So sánh","Điệp từ","Liệt kê"],a:1,e:"'Như dát bạc' → so sánh"},
+        {q:"Từ trái nghĩa với 'hiền hòa':",o:["êm ả","hung dữ","nhẹ nhàng","bình yên"],a:1,e:"'hung dữ' trái nghĩa với 'hiền hòa'"},
+        {q:"Chủ ngữ trong 'Tiếng cười đùa vang khắp bờ sông.' là:",o:["vang khắp bờ sông","Tiếng cười đùa","bờ sông","Tiếng"],a:1,e:"CN: 'Tiếng cười đùa' (cái gì vang khắp bờ sông?)"},
+      ]},
+      {id:"e3v_ck1",title:"Cuối Kỳ 1 – Tiếng Việt Lớp 3",dur:40,sem:"HK1",qs:[
+        {q:"'Bạn Minh là học sinh giỏi nhất lớp.' là loại câu kể gì?",o:["Ai làm gì?","Ai là gì?","Ai thế nào?","Câu cảm"],a:1,e:"VN có 'là' + danh từ → Câu kể 'Ai là gì?'"},
+        {q:"Từ nào là từ láy?",o:["đường phố","lung linh","học hành","trường học"],a:1,e:"'lung linh' – láy phụ âm đầu 'l' → từ láy"},
+        {q:"Điền vào: '...iên nhẫn'",o:["kiên nhẫn","giên nhẫn","diên nhẫn","riên nhẫn"],a:0,e:"'kiên nhẫn' – k+iên = kiên (kiên trì, bền bỉ)"},
+        {q:"'Bầu trời trong xanh.' – Vị ngữ là:",o:["Bầu trời","trong xanh","Bầu","trời trong xanh"],a:1,e:"VN: 'trong xanh' (bầu trời thế nào?)"},
+        {q:"Từ ghép tổng hợp là từ như thế nào?",o:["Tiếng lặp lại âm/vần","Các tiếng cùng loại ghép lại","Tiếng có nghĩa + tiếng không nghĩa","Tiếng nước ngoài"],a:1,e:"Từ ghép tổng hợp: các tiếng cùng loại (bàn ghế, quần áo, sách vở...)"},
+        {q:"Câu nào là câu kể 'Ai thế nào?'",o:["Em đang học bài.","Bạn Hoa là lớp trưởng.","Cô giáo rất hiền.","Chúng em đi dã ngoại."],a:2,e:"'Cô giáo rất hiền.' – VN là tính từ 'hiền' → Câu kể 'Ai thế nào?'"},
+        {q:"Từ nào viết đúng chính tả?",o:["trăn trở","chăn trở","trăn chở","chăn chở"],a:0,e:"'trăn trở' (băn khoăn, lo lắng) – tr+ăn = trăn, tr+ở = trở"},
+        {q:"Nhân hóa là biện pháp:",o:["So sánh 2 sự vật","Gán tính người cho vật","Lặp lại từ ngữ","Liệt kê sự vật"],a:1,e:"Nhân hóa: gán tính chất, hành động của người cho vật (cây cối, con vật)"},
+        {q:"Ý chính của đoạn văn thường nằm ở đâu?",o:["Giữa đoạn","Câu đầu hoặc câu cuối","Bất kỳ vị trí","Không có"],a:1,e:"Ý chính thường ở câu đầu (câu chủ đề) hoặc câu cuối (kết luận)"},
+        {q:"Câu 'Ôi, mùa xuân đến rồi!' là loại câu gì?",o:["Câu kể","Câu hỏi","Câu cảm","Câu cầu khiến"],a:2,e:"Câu cảm (cảm thán): bộc lộ cảm xúc, dùng dấu (!)"},
+      ]},
+      {id:"e3v_gk2",title:"Giữa Kỳ 2 – Tiếng Việt Lớp 3",dur:40,sem:"HK2",
+       passage:"Bài đọc: CHÚ BỒ CÂU TRẮNG\nTrong vườn nhà em có nuôi một đàn bồ câu trắng. Mỗi buổi sáng, chúng bay lượn trên bầu trời như những đám mây trắng bồng bềnh. Tiếng cánh vỗ phành phạch xua tan cái yên tĩnh của buổi sớm. Bồ câu rất hiền lành và gần gũi với con người. Chúng là biểu tượng của hòa bình và tình yêu thương.",
+       qs:[
+        {q:"Đàn bồ câu được so sánh với gì?",o:["Những bông tuyết","Những đám mây trắng bồng bềnh","Những tờ giấy trắng","Những chiếc diều"],a:1,e:"'bay lượn...như những đám mây trắng bồng bềnh'"},
+        {q:"'Bồng bềnh' là từ loại gì?",o:["Danh từ","Từ láy","Từ ghép","Động từ"],a:1,e:"'bồng bềnh' – láy phụ âm đầu 'b' → từ láy"},
+        {q:"Bồ câu là biểu tượng của điều gì?",o:["Sức mạnh và tốc độ","Hòa bình và tình yêu thương","Thông minh và khéo léo","Tự do và đơn độc"],a:1,e:"'Chúng là biểu tượng của hòa bình và tình yêu thương.'"},
+        {q:"'Tiếng cánh vỗ phành phạch.' là câu kể loại gì?",o:["Ai làm gì?","Ai là gì?","Ai thế nào?","Câu cảm"],a:0,e:"VN là động từ 'vỗ phành phạch' → Câu kể 'Ai làm gì?'"},
+        {q:"Tìm từ ghép: lung linh, bồ câu, phành phạch, bồng bềnh",o:["lung linh","bồ câu","phành phạch","bồng bềnh"],a:1,e:"'bồ câu' là tên loài chim → từ ghép phân loại"},
+        {q:"Điền vào: '...iền lành'",o:["hiền lành","giền lành","diền lành","riền lành"],a:0,e:"'hiền lành' – hi+ền = hiền"},
+        {q:"Từ đồng nghĩa với 'gần gũi':",o:["xa lạ","thân thiết","lạnh lùng","xa cách"],a:1,e:"'thân thiết' đồng nghĩa với 'gần gũi'"},
+        {q:"Vị ngữ trong 'Bồ câu rất hiền lành.' là:",o:["Bồ câu","rất hiền lành","hiền lành","rất"],a:1,e:"VN: 'rất hiền lành' (bồ câu thế nào?)"},
+        {q:"'Phành phạch' là từ láy loại gì?",o:["Láy hoàn toàn","Láy phụ âm đầu","Láy vần","Láy âm"],a:0,e:"'phành phạch' – lặp lại âm tiết (phành/phạch biến âm) → láy hoàn toàn"},
+        {q:"Nội dung chính của bài đọc là gì?",o:["Cách nuôi bồ câu","Bồ câu đẹp và hiền lành, là biểu tượng hòa bình","Bồ câu bay nhanh","Vườn nhà em"],a:1,e:"Bài tả vẻ đẹp, tính hiền lành của bồ câu và ý nghĩa biểu tượng của nó"},
+      ]},
+      {id:"e3v_ck2",title:"Cuối Kỳ 2 – Tiếng Việt Lớp 3",dur:40,sem:"HK2",qs:[
+        {q:"Câu 'Bà em tóc bạc phơ.' – loại câu kể gì?",o:["Ai làm gì?","Ai là gì?","Ai thế nào?","Câu hỏi"],a:2,e:"VN là tính từ 'tóc bạc phơ' → Câu kể 'Ai thế nào?'"},
+        {q:"Từ nào là từ ghép phân loại?",o:["sách vở","quần áo","hoa hồng","bàn ghế"],a:2,e:"'hoa hồng' là tên loại hoa cụ thể → từ ghép phân loại"},
+        {q:"Điền vào: 'thân ...ương'",o:["thân dương","thân rương","thân thương","thân gương"],a:2,e:"'thân thương' – th+ương = thương (yêu quý)"},
+        {q:"Nhân hóa trong câu: 'Cây tre cúi đầu chào gió.'",o:["cây tre","cúi đầu chào gió","gió","cúi đầu"],a:1,e:"'cúi đầu chào' là hành động của người, gán cho cây tre → nhân hóa"},
+        {q:"'Lao xao' là từ láy loại gì?",o:["Láy phụ âm đầu","Láy vần","Láy hoàn toàn","Không phải từ láy"],a:1,e:"'lao xao' – phần vần 'ao' lặp lại → láy vần"},
+        {q:"Câu nào có biện pháp so sánh?",o:["Mây trắng bay.","Cánh đồng xanh.","Lúa vàng như tơ.","Nắng chiều xuống."],a:2,e:"'Lúa vàng như tơ.' – 'như' là từ so sánh → biện pháp so sánh"},
+        {q:"Cấu trúc đoạn văn lớp 3 gồm:",o:["Chỉ cần câu đầu","Mở đầu – Thân – Kết","Thân và kết","Chỉ cần thân bài"],a:1,e:"Đoạn văn đầy đủ gồm: Mở đầu (giới thiệu) – Thân (chi tiết) – Kết (cảm nghĩ)"},
+        {q:"Từ nào viết đúng chính tả?",o:["rộn rang","rộn dang","rộn giàng","lộn rang"],a:0,e:"'rộn rang' đúng chính tả (âm thanh vui vẻ, náo nhiệt)"},
+        {q:"Điền vào: '...ân trọng'",o:["chân trọng","trân trọng","chăn trọng","trăn trọng"],a:1,e:"'trân trọng' – tr+ân = trân (quý trọng, tôn trọng)"},
+        {q:"Từ đồng nghĩa với 'chăm chỉ':",o:["lười biếng","siêng năng","thông minh","mạnh mẽ"],a:1,e:"'siêng năng' đồng nghĩa với 'chăm chỉ'"},
+      ]},
+    ],
+  },
+};
+const GRADE4={
+  label:"Lớp 4",color:"from-green-400 to-teal-500",icon:"🏆",
+  math:{
+    label:"Toán",color:"from-orange-400 to-yellow-400",icon:"📐",
+    theory:[
+      {id:"t4m1",title:"Số tự nhiên lớn – Đến hàng triệu",icon:"🔢",
+       content:[
+         {h:"Các hàng trong hệ thập phân",t:"Đơn vị → Chục → Trăm → Nghìn → Chục nghìn → Trăm nghìn → Triệu → Chục triệu → Trăm triệu → Tỷ. Ví dụ: 4 567 890 đọc là 'bốn triệu năm trăm sáu mươi bảy nghìn tám trăm chín mươi'."},
+         {h:"Đọc và viết số lớn",t:"Tách nhóm từ phải sang trái, mỗi nhóm 3 chữ số. 1 000 000 = 1 triệu. 10 000 000 = 10 triệu. 1 000 000 000 = 1 tỷ. Số 2 345 678: đọc là 'hai triệu ba trăm bốn mươi lăm nghìn sáu trăm bảy mươi tám'."},
+         {h:"So sánh và làm tròn số",t:"So sánh: so từ hàng cao nhất. Làm tròn đến hàng chục: xem chữ số hàng đv, ≥5 làm tròn lên, <5 làm tròn xuống. 8 765 → làm tròn chục: 8 770. 8 764 → 8 760."},
+       ],
+       tips:["Cứ 3 chữ số là 1 nhóm (đọc từ trái sang phải)","1 triệu = 1 000 nghìn = 1 000 000","Làm tròn chục: nhìn hàng đơn vị; làm tròn trăm: nhìn hàng chục"],
+       ex:[{q:"Đọc số 3 456 789",a:"Ba triệu bốn trăm năm mươi sáu nghìn bảy trăm tám mươi chín"},{q:"Làm tròn 4 567 đến hàng chục",a:"4 570"},{q:"Làm tròn 12 345 đến hàng trăm",a:"12 300"}]},
+      {id:"t4m2",title:"Phân số – Khái niệm và so sánh",icon:"½",
+       content:[
+         {h:"Phân số – Tử và mẫu",t:"Phân số a/b: tử số a (trên), mẫu số b (dưới, b≠0). Đọc: 'a phần b'. 3/7: ba phần bảy. Ý nghĩa: chia 7 phần bằng nhau, lấy 3 phần. Phân số = 1 khi tử = mẫu (5/5=1). Phân số < 1 khi tử < mẫu."},
+         {h:"Rút gọn phân số",t:"Chia cả tử và mẫu cho cùng một số (ƯCLN). 12/18: chia cả hai cho 6 → 2/3. 8/12: chia cho 4 → 2/3. Phân số tối giản: tử và mẫu không có ước chung > 1."},
+         {h:"Quy đồng mẫu số",t:"Đưa các phân số về cùng mẫu. 1/3 và 1/4 → mẫu chung 12: 1/3 = 4/12; 1/4 = 3/12. Tìm BCNN của các mẫu số làm mẫu chung."},
+       ],
+       tips:["Rút gọn: chia tử và mẫu cho ƯCLN","Quy đồng: nhân tử và mẫu cùng số để có mẫu bằng nhau","Phân số tối giản khi ƯCLN(tử,mẫu)=1"],
+       ex:[{q:"Rút gọn 6/8",a:"3/4 (chia cả hai cho 2)"},{q:"Quy đồng 1/2 và 1/3",a:"3/6 và 2/6"},{q:"So sánh 3/4 và 2/3",a:"3/4 > 2/3 (quy đồng: 9/12 > 8/12)"}]},
+      {id:"t4m3",title:"Phép tính với phân số",icon:"✖️",
+       content:[
+         {h:"Cộng phân số cùng mẫu",t:"a/c + b/c = (a+b)/c. Ví dụ: 2/7 + 3/7 = 5/7. Giữ nguyên mẫu số, cộng tử số. 3/8 + 5/8 = 8/8 = 1."},
+         {h:"Cộng phân số khác mẫu",t:"Quy đồng mẫu số trước, rồi cộng. 1/3 + 1/4: quy đồng mẫu 12 → 4/12 + 3/12 = 7/12."},
+         {h:"Trừ phân số",t:"Cùng mẫu: a/c - b/c = (a-b)/c. Ví dụ: 5/7 - 2/7 = 3/7. Khác mẫu: quy đồng trước rồi trừ. 1/2 - 1/3 = 3/6 - 2/6 = 1/6."},
+         {h:"Nhân và chia phân số",t:"Nhân: (a/b) × (c/d) = (a×c)/(b×d). Ví dụ: 2/3 × 3/4 = 6/12 = 1/2. Chia: (a/b) ÷ (c/d) = (a/b) × (d/c). Ví dụ: 2/3 ÷ 4/5 = 2/3 × 5/4 = 10/12 = 5/6."},
+       ],
+       tips:["Cộng/trừ cùng mẫu: chỉ cộng/trừ tử số","Cộng/trừ khác mẫu: quy đồng mẫu trước","Nhân phân số: nhân tử với tử, mẫu với mẫu","Chia phân số: đảo ngược phân số chia rồi nhân"],
+       ex:[{q:"1/4 + 2/4 = ?",a:"3/4"},{q:"3/5 - 1/5 = ?",a:"2/5"},{q:"2/3 × 3/5 = ?",a:"6/15 = 2/5"}]},
+      {id:"t4m4",title:"Góc và Đo góc",icon:"📐",
+       content:[
+         {h:"Khái niệm góc",t:"Góc là hình tạo bởi 2 tia chung gốc. Đỉnh góc là điểm chung. Đơn vị đo góc: độ (°). Dùng thước đo góc (thước đo độ) để đo."},
+         {h:"Các loại góc",t:"Góc nhọn: < 90°. Góc vuông: = 90°. Góc tù: > 90° và < 180°. Góc bẹt: = 180° (đường thẳng). Góc > 180° gọi là góc lớn (góc phản)."},
+         {h:"Đo và vẽ góc",t:"Đặt tâm thước đo trùng với đỉnh góc. Cạnh ban đầu trùng với đường 0°. Đọc số độ ở vạch mà cạnh kia đi qua. Vẽ góc 60°: vẽ tia gốc, đặt thước, đánh dấu 60°, nối lại."},
+       ],
+       tips:["Góc vuông = 90° (ký hiệu □ tại đỉnh)","Góc nhọn < góc vuông < góc tù < góc bẹt","Tổng 2 góc của tam giác vuông = 90°"],
+       ex:[{q:"Góc 60° là loại góc gì?",a:"Góc nhọn (< 90°)"},{q:"Tổng các góc trong tam giác = ?",a:"180°"},{q:"Góc 120° là loại góc gì?",a:"Góc tù (> 90° và < 180°)"}]},
+      {id:"t4m5",title:"Diện tích hình học",icon:"📏",
+       content:[
+         {h:"Diện tích hình chữ nhật",t:"S = dài × rộng. Đơn vị: cm², m², km²,... HCN dài 8m rộng 5m: S = 8×5 = 40 m². 1 m² = 10 000 cm². 1 km² = 1 000 000 m²."},
+         {h:"Diện tích hình vuông",t:"S = cạnh × cạnh = cạnh². HV cạnh 6cm: S = 6² = 36 cm². Nếu biết diện tích → tính cạnh: cạnh = √S (học cao hơn)."},
+         {h:"Diện tích hình bình hành",t:"S = đáy × chiều cao. Đáy và chiều cao vuông góc nhau. HBH đáy 10cm cao 6cm: S = 10×6 = 60 cm²."},
+       ],
+       tips:["DT HCN = dài × rộng","DT HV = cạnh × cạnh","Đơn vị DT: cm², m², km²","1m² = 10 000 cm²"],
+       ex:[{q:"DT HCN dài 12cm rộng 8cm",a:"96 cm²"},{q:"DT HV cạnh 9cm",a:"81 cm²"},{q:"Đổi 2m² = ? cm²",a:"20 000 cm²"}]},
+    ],
+    exercises:[
+      {id:"ex4m1",title:"Luyện tập: Số lớn và Phân số",icon:"📝",diff:"Trung bình",qs:[
+        {q:"Số 'ba triệu bốn trăm nghìn' viết là:",o:["3040000","3400000","3004000","3000400"],a:1,e:"Ba triệu=3 000 000, bốn trăm nghìn=400 000 → 3 400 000"},
+        {q:"Làm tròn 23 467 đến hàng nghìn:",o:["23 000","23 400","23 500","24 000"],a:2,e:"Nhìn hàng trăm: 4 < 5 → làm tròn xuống → 23 000. Thực ra hàng trăm là 4 → 23 000. Chờ: 23 467, làm tròn đến nghìn, hàng trăm=4 < 5 → 23 000"},
+        {q:"Phân số nào bằng 2/3?",o:["4/9","6/9","4/6","6/8"],a:1,e:"6/9: chia cả hai cho 3 → 2/3. Vậy 6/9 = 2/3"},
+        {q:"Rút gọn phân số 15/20:",o:["3/4","5/4","3/5","1/4"],a:0,e:"ƯCLN(15,20)=5; 15÷5=3; 20÷5=4 → 3/4"},
+        {q:"So sánh: 3/5 ___ 4/7",o:[">","<","=","Không so được"],a:0,e:"Quy đồng: 3/5=21/35; 4/7=20/35; 21>20 → 3/5 > 4/7"},
+        {q:"1/3 + 2/3 = ?",o:["1","3/6","2/3","1/2"],a:0,e:"Cùng mẫu: (1+2)/3 = 3/3 = 1"},
+        {q:"3/4 - 1/4 = ?",o:["2/4","1/2","3/4","2/8"],a:0,e:"(3-1)/4 = 2/4 = 1/2. Cả 2/4 và 1/2 đều đúng, nhưng 2/4 trước khi rút gọn"},
+        {q:"1/2 × 2/3 = ?",o:["2/5","1/3","2/6","3/4"],a:1,e:"(1×2)/(2×3) = 2/6 = 1/3"},
+      ]},
+      {id:"ex4m2",title:"Luyện tập: Góc và Diện tích",icon:"📐",diff:"Trung bình",qs:[
+        {q:"Góc 75° là loại góc gì?",o:["Góc nhọn","Góc vuông","Góc tù","Góc bẹt"],a:0,e:"75° < 90° → góc nhọn"},
+        {q:"Góc 135° là loại góc gì?",o:["Góc nhọn","Góc vuông","Góc tù","Góc bẹt"],a:2,e:"90° < 135° < 180° → góc tù"},
+        {q:"Tổng 3 góc trong tam giác = ?",o:["90°","180°","270°","360°"],a:1,e:"Tổng 3 góc trong mọi tam giác = 180°"},
+        {q:"DT HCN dài 15cm rộng 8cm:",o:["46 cm²","120 cm²","23 cm","90 cm²"],a:1,e:"S = 15×8 = 120 cm²"},
+        {q:"DT HV cạnh 11cm:",o:["44 cm²","121 cm²","22 cm","88 cm²"],a:1,e:"S = 11×11 = 121 cm²"},
+        {q:"HCN có DT 72 cm², chiều rộng 8cm. Chiều dài:",o:["9cm","8cm","64cm","12cm"],a:0,e:"dài = DT ÷ rộng = 72 ÷ 8 = 9cm"},
+        {q:"1 m² = ? cm²",o:["100 cm²","1000 cm²","10000 cm²","100000 cm²"],a:2,e:"1m = 100cm → 1m² = 100×100 = 10 000 cm²"},
+        {q:"Sân trường HCN dài 40m rộng 25m. DT sân:",o:["130 m²","1000 m²","65 m","900 m²"],a:1,e:"S = 40×25 = 1 000 m²"},
+      ]},
+      {id:"ex4m3",title:"Luyện tập: Phép tính Phân số",icon:"🎯",diff:"Nâng cao",qs:[
+        {q:"1/4 + 1/3 = ?",o:["2/7","7/12","2/12","1/6"],a:1,e:"Quy đồng: 3/12 + 4/12 = 7/12"},
+        {q:"3/4 - 2/3 = ?",o:["1/12","1/7","5/12","2/6"],a:0,e:"Quy đồng: 9/12 - 8/12 = 1/12"},
+        {q:"2/3 × 3/4 = ?",o:["6/12","1/2","5/7","2/4"],a:0,e:"(2×3)/(3×4) = 6/12 = 1/2. Cả 6/12 và 1/2 đúng"},
+        {q:"3/4 ÷ 3/8 = ?",o:["1/2","2","9/32","3/2"],a:1,e:"3/4 × 8/3 = 24/12 = 2"},
+        {q:"Rút gọn 24/36:",o:["2/3","4/6","6/9","12/18"],a:0,e:"ƯCLN(24,36)=12; 24÷12=2; 36÷12=3 → 2/3"},
+        {q:"Quy đồng 2/3 và 3/4:",o:["8/12 và 9/12","6/12 và 9/12","8/12 và 6/12","2/12 và 3/12"],a:0,e:"Mẫu chung 12: 2/3=8/12; 3/4=9/12"},
+        {q:"1/2 + 1/4 + 1/4 = ?",o:["3/10","3/4","1","1/2"],a:2,e:"1/2 + 1/4 + 1/4 = 2/4 + 1/4 + 1/4 = 4/4 = 1"},
+        {q:"Một nửa của 3/4 là:",o:["3/2","1/4","3/8","6/4"],a:2,e:"1/2 × 3/4 = 3/8"},
+      ]},
+    ],
+    exams:[
+      {id:"e4m_gk1",title:"Giữa Kỳ 1 – Toán Lớp 4",dur:40,sem:"HK1",qs:[
+        {q:"Số 'năm triệu ba trăm hai mươi nghìn' viết là:",o:["5032000","5320000","5302000","5230000"],a:1,e:"5 triệu=5 000 000, 320 nghìn=320 000 → 5 320 000"},
+        {q:"Làm tròn 456 789 đến hàng chục nghìn:",o:["450000","456000","460000","400000"],a:2,e:"Hàng nghìn=6 ≥ 5 → làm tròn lên → 460 000"},
+        {q:"Rút gọn 18/24:",o:["9/12","3/4","6/8","2/3"],a:1,e:"ƯCLN(18,24)=6; 18÷6=3; 24÷6=4 → 3/4"},
+        {q:"So sánh: 5/8 ___ 3/5",o:[">","<","=","≥"],a:0,e:"Quy đồng mẫu 40: 5/8=25/40; 3/5=24/40; 25>24 → 5/8 > 3/5"},
+        {q:"2/5 + 3/5 = ?",o:["5/10","1","5/5","1/5"],a:1,e:"(2+3)/5 = 5/5 = 1"},
+        {q:"7/8 - 3/8 = ?",o:["1/2","4/8","4/0","3/4"],a:0,e:"(7-3)/8 = 4/8 = 1/2"},
+        {q:"Góc 45° là loại góc gì?",o:["Góc tù","Góc vuông","Góc nhọn","Góc bẹt"],a:2,e:"45° < 90° → góc nhọn"},
+        {q:"DT HCN dài 20m rộng 15m:",o:["70 m²","300 m²","35 m","200 m²"],a:1,e:"S = 20×15 = 300 m²"},
+        {q:"DT HV cạnh 8cm:",o:["32 cm²","64 cm²","16 cm","48 cm²"],a:1,e:"S = 8×8 = 64 cm²"},
+        {q:"Mảnh vườn HCN dài 30m rộng 20m. DT là:",o:["100 m²","500 m²","600 m²","50 m"],a:2,e:"S = 30×20 = 600 m²"},
+      ]},
+      {id:"e4m_ck1",title:"Cuối Kỳ 1 – Toán Lớp 4",dur:40,sem:"HK1",qs:[
+        {q:"Số nào lớn hơn: 2 345 678 hay 2 354 678?",o:["2 345 678","2 354 678","Bằng nhau","Không so được"],a:1,e:"Hàng nghìn: 45 < 54 → 2 354 678 > 2 345 678"},
+        {q:"1/3 + 1/4 = ?",o:["2/7","7/12","2/12","1/12"],a:1,e:"Quy đồng 12: 4/12 + 3/12 = 7/12"},
+        {q:"5/6 - 1/4 = ?",o:["4/2","7/12","4/6","1/3"],a:1,e:"Quy đồng 12: 10/12 - 3/12 = 7/12"},
+        {q:"2/3 × 3/5 = ?",o:["5/8","6/15","2/5","1/3"],a:2,e:"(2×3)/(3×5) = 6/15 = 2/5"},
+        {q:"1/2 ÷ 1/4 = ?",o:["1/8","2","4","1/2"],a:1,e:"1/2 × 4/1 = 4/2 = 2"},
+        {q:"Tổng 3 góc tam giác = 180°. Hai góc là 60° và 70°. Góc thứ ba:",o:["40°","50°","60°","70°"],a:1,e:"180° - 60° - 70° = 50°"},
+        {q:"HCN DT 120 cm², rộng 8cm. Chiều dài:",o:["14cm","15cm","16cm","20cm"],a:1,e:"dài = 120 ÷ 8 = 15cm"},
+        {q:"Rút gọn 30/45:",o:["10/15","6/9","2/3","3/4"],a:2,e:"ƯCLN(30,45)=15; 30÷15=2; 45÷15=3 → 2/3"},
+        {q:"1 m² = ? dm²",o:["10 dm²","100 dm²","1000 dm²","10000 dm²"],a:1,e:"1m = 10dm → 1m² = 10×10 = 100 dm²"},
+        {q:"Sân HV cạnh 25m. Chu vi và DT sân:",o:["CV=100m; S=625m²","CV=50m; S=625m²","CV=100m; S=125m²","CV=4m; S=625m²"],a:0,e:"CV = 4×25=100m; S = 25×25=625 m²"},
+      ]},
+      {id:"e4m_gk2",title:"Giữa Kỳ 2 – Toán Lớp 4",dur:40,sem:"HK2",qs:[
+        {q:"Quy đồng 2/3 và 3/4:",o:["8/12 và 9/12","6/12 và 9/12","4/6 và 3/4","2/4 và 3/4"],a:0,e:"Mẫu chung 12: 2/3×4=8/12; 3/4×3=9/12"},
+        {q:"3/4 + 5/6 = ?",o:["8/10","19/12","4/5","9/12"],a:1,e:"Quy đồng 12: 9/12 + 10/12 = 19/12"},
+        {q:"7/8 - 2/3 = ?",o:["5/5","5/24","21/24 - 16/24","1/24"],a:1,e:"Quy đồng 24: 21/24 - 16/24 = 5/24"},
+        {q:"3/4 × 4/9 = ?",o:["12/36","1/3","7/13","4/9"],a:1,e:"(3×4)/(4×9) = 12/36 = 1/3"},
+        {q:"Góc nhọn × 2 có thể là góc gì?",o:["Luôn là góc nhọn","Có thể là góc tù","Luôn là góc bẹt","Luôn là góc vuông"],a:1,e:"VD: 60°×2=120° là góc tù. 30°×2=60° vẫn nhọn → 'có thể là góc tù'"},
+        {q:"DT hình bình hành đáy 12cm cao 8cm:",o:["40 cm²","96 cm²","20 cm","84 cm²"],a:1,e:"S = đáy × cao = 12×8 = 96 cm²"},
+        {q:"Phân số nào lớn nhất?",o:["2/3","3/4","5/6","7/8"],a:3,e:"Quy đồng mẫu 24: 16/24 < 18/24 < 20/24 < 21/24 → 7/8 lớn nhất"},
+        {q:"Số tự nhiên nào có thể điền vào: 2/5 < ?/5 < 4/5?",o:["1","2","3","5"],a:2,e:"2 < ? < 4 → ? = 3"},
+        {q:"Một nửa của 2/3 là:",o:["2/6","1/3","4/3","1/6"],a:1,e:"1/2 × 2/3 = 2/6 = 1/3"},
+        {q:"HCN dài 3/4 m rộng 2/3 m. DT là:",o:["5/7 m²","1/2 m²","6/12 m²","2/4 m²"],a:1,e:"S = 3/4 × 2/3 = 6/12 = 1/2 m²"},
+      ]},
+      {id:"e4m_ck2",title:"Cuối Kỳ 2 – Toán Lớp 4",dur:40,sem:"HK2",qs:[
+        {q:"Rút gọn 48/72:",o:["4/6","2/3","6/9","16/24"],a:1,e:"ƯCLN(48,72)=24; 48÷24=2; 72÷24=3 → 2/3"},
+        {q:"1/4 + 1/3 + 1/6 = ?",o:["3/13","3/4","3/12","9/12"],a:1,e:"Quy đồng 12: 3/12 + 4/12 + 2/12 = 9/12 = 3/4"},
+        {q:"5/6 ÷ 5/12 = ?",o:["25/72","2","1/2","12/6"],a:1,e:"5/6 × 12/5 = 60/30 = 2"},
+        {q:"Tam giác có 2 góc là 55° và 65°. Góc thứ 3:",o:["50°","60°","70°","80°"],a:1,e:"180°-55°-65°=60°"},
+        {q:"DT tam giác = ?",o:["đáy × cao","đáy × cao ÷ 2","đáy + cao","(đáy+cao)×2"],a:1,e:"DT tam giác = đáy × chiều cao ÷ 2"},
+        {q:"Tam giác đáy 8cm cao 6cm. DT = ?",o:["48 cm²","24 cm²","14 cm","28 cm²"],a:1,e:"S = 8×6÷2 = 24 cm²"},
+        {q:"Phân số nào nhỏ hơn 1?",o:["5/4","7/3","3/3","2/5"],a:3,e:"2/5: tử < mẫu → phân số < 1. Các phân số còn lại ≥ 1"},
+        {q:"Điền số: 2/7 = ?/21",o:["3","4","6","8"],a:2,e:"21÷7=3, vậy nhân tử 2×3=6 → 2/7 = 6/21"},
+        {q:"Mảnh đất HCN dài 45m rộng 30m. Giá 500 000đ/m². Tổng giá trị:",o:["675 000 000đ","750 000 000đ","375 000 000đ","600 000 000đ"],a:0,e:"S = 45×30=1350 m²; Giá = 1350×500000 = 675 000 000đ"},
+        {q:"Số nào là BCNN của 4 và 6?",o:["24","12","6","2"],a:1,e:"BCNN(4,6)=12 (bội chung nhỏ nhất)"},
+      ]},
+    ],
+  },
+  vietnamese:{
+    label:"Tiếng Việt",color:"from-purple-400 to-pink-400",icon:"📖",
+    theory:[
+      {id:"t4v1",title:"Văn kể chuyện và Miêu tả",icon:"📚",
+       content:[
+         {h:"Văn kể chuyện",t:"Văn kể chuyện: kể lại sự việc có diễn biến theo thời gian. Cấu trúc: Mở bài (giới thiệu hoàn cảnh, nhân vật) → Thân bài (diễn biến sự việc) → Kết bài (kết thúc, bài học). Nhân vật có lời nói, hành động, suy nghĩ cụ thể."},
+         {h:"Văn miêu tả",t:"Văn miêu tả: tái hiện sự vật, cảnh vật, con người bằng ngôn ngữ. Miêu tả theo trình tự: từ xa đến gần, từ ngoài vào trong, từ trên xuống dưới. Dùng từ ngữ gợi tả, biện pháp tu từ (so sánh, nhân hóa)."},
+         {h:"Mở bài trực tiếp và gián tiếp",t:"Trực tiếp: vào thẳng vào đề. 'Mỗi sáng, tôi thường ra vườn ngắm hoa.' Gián tiếp: dẫn dắt vào đề bằng ý liên quan. 'Mùa xuân về, muôn hoa đua nở. Trong vườn nhà em, đẹp nhất là cây hoa mai.'"},
+       ],
+       tips:["Văn kể: nhớ trình tự sự việc (trước → sau)","Văn miêu tả: chú ý từ gợi tả (màu sắc, hình dáng, âm thanh, mùi hương)","Kết bài cần nêu cảm nghĩ, bài học"],
+       ex:[{q:"Mở bài gián tiếp khác trực tiếp ở điểm nào?",a:"Gián tiếp dẫn dắt từ ý khác rồi mới vào chủ đề"},{q:"Văn kể chuyện cần có gì?",a:"Nhân vật, diễn biến sự việc theo thời gian, kết thúc"}]},
+      {id:"t4v2",title:"Danh từ, Động từ, Tính từ – Nâng cao",icon:"🔤",
+       content:[
+         {h:"Danh từ chung và danh từ riêng",t:"Danh từ chung: gọi chung cho loại (sông, núi, thành phố). Danh từ riêng: tên riêng, viết hoa (sông Hồng, núi Bà Đen, thành phố Hà Nội). Danh từ riêng chỉ người, địa danh, tổ chức."},
+         {h:"Động từ và cụm động từ",t:"Động từ chỉ hành động (chạy, học, ăn) hoặc trạng thái (ngủ, thức, tồn tại). Cụm động từ: động từ + các từ bổ sung nghĩa. 'Đang học bài' = đang (phụ trước) + học (ĐT chính) + bài (phụ sau)."},
+         {h:"Tính từ và cụm tính từ",t:"Tính từ chỉ đặc điểm, tính chất, trạng thái. Cụm tính từ: 'rất đẹp', 'cao lắm', 'xanh mướt'. Tính từ so sánh: đẹp hơn, đẹp nhất, đẹp như..."},
+       ],
+       tips:["Danh từ riêng luôn viết hoa","Động từ trạng thái: yêu, ghét, sợ, biết... (không hành động thể hiện ra ngoài)","Tính từ có thể thêm 'rất, quá, lắm' phía trước/sau"],
+       ex:[{q:"'Sông Mekong' là danh từ chung hay riêng?",a:"Danh từ riêng (tên riêng của dòng sông)"},{q:"'Đang chạy nhanh' là cụm gì?",a:"Cụm động từ (đang=phụ trước; chạy=ĐT; nhanh=phụ sau)"}]},
+      {id:"t4v3",title:"Câu đơn và Câu ghép",icon:"💬",
+       content:[
+         {h:"Câu đơn",t:"Câu đơn: có một cụm chủ ngữ - vị ngữ. Ví dụ: 'Chim hót líu lo.' (CN: Chim; VN: hót líu lo). Câu đơn đầy đủ: có đủ CN và VN; Câu đặc biệt: thiếu CN hoặc VN (dùng trong văn)."},
+         {h:"Câu ghép",t:"Câu ghép: có 2 cụm CN-VN trở lên. Nối bằng: quan hệ từ (vì...nên, nếu...thì, tuy...nhưng, và, nhưng, hoặc), dấu phẩy. VD: 'Trời mưa to, nhưng chúng em vẫn đến trường.'"},
+         {h:"Quan hệ từ trong câu ghép",t:"Nguyên nhân-kết quả: vì...nên, do...nên. Điều kiện-kết quả: nếu...thì. Tương phản: tuy...nhưng, mặc dù...nhưng. Bổ sung: và, thêm vào đó. Lựa chọn: hoặc, hay."},
+       ],
+       tips:["Câu đơn: 1 CN + 1 VN","Câu ghép: ≥ 2 cụm CN-VN","Tìm quan hệ từ để nhận biết câu ghép"],
+       ex:[{q:"'Mưa to và gió mạnh.' – câu đơn hay ghép?",a:"Câu ghép (2 VN: mưa to / gió mạnh, nối bằng 'và')"},{q:"Điền quan hệ từ: '... mệt, em vẫn học bài.'",a:"Tuy (mệt), nhưng (em vẫn học bài) → Tuy...nhưng"}]},
+      {id:"t4v4",title:"Viết đoạn văn hoàn chỉnh",icon:"📝",
+       content:[
+         {h:"Cấu trúc bài văn hoàn chỉnh",t:"Mở bài → Thân bài (nhiều đoạn) → Kết bài. Mỗi đoạn thân bài: câu chủ đề + câu triển khai + câu kết đoạn. Các đoạn liên kết với nhau bằng từ nối (tiếp theo, hơn nữa, cuối cùng...)."},
+         {h:"Liên kết câu và đoạn",t:"Lặp từ ngữ: dùng lại từ đã dùng ở câu trước. Dùng đại từ: thay 'bạn Nam' bằng 'cậu ấy', 'em ấy'. Dùng từ nối: và, nhưng, vì vậy, do đó, mặt khác, ngoài ra..."},
+         {h:"Dấu câu nâng cao",t:"Dấu hai chấm (:): báo hiệu lời dẫn trực tiếp hoặc liệt kê. Dấu ngoặc kép (\"\") trích lời nói. Dấu gạch ngang (—): đánh dấu lời thoại trực tiếp. Dấu chấm lửng (...): bỏ lửng, tạo ngừng."},
+       ],
+       tips:["Liên kết câu tránh lặp từ nhàm chán (dùng đại từ thay thế)","Mỗi đoạn văn chỉ có 1 ý chính","Câu đầu và câu cuối đoạn phải liên quan chặt chẽ"],
+       ex:[{q:"Từ nối nào thể hiện quan hệ tương phản?",a:"Nhưng, tuy nhiên, mặc dù, song"},{q:"Dấu câu nào dùng khi trích lời nói?",a:"Dấu ngoặc kép (\"\") và dấu hai chấm (:)"}]},
+    ],
+    exercises:[
+      {id:"ex4v1",title:"Luyện tập: Câu đơn – Câu ghép",icon:"💬",diff:"Trung bình",qs:[
+        {q:"Câu nào là câu ghép?",o:["Chim hót líu lo.","Trời mưa và gió thổi mạnh.","Hoa nở rộ trong vườn.","Bạn Lan học rất giỏi."],a:1,e:"'Trời mưa và gió thổi mạnh.' – 2 cụm CN-VN (trời/mưa; gió/thổi) → câu ghép"},
+        {q:"Quan hệ từ nào thể hiện nguyên nhân-kết quả?",o:["Tuy...nhưng","Nếu...thì","Vì...nên","Mặc dù...nhưng"],a:2,e:"'Vì...nên' thể hiện quan hệ nguyên nhân → kết quả"},
+        {q:"Điền quan hệ từ: '... em cố gắng, ... em sẽ đạt điểm cao.'",o:["Vì...nên","Nếu...thì","Tuy...nhưng","Mặc dù...vẫn"],a:1,e:"Điều kiện-kết quả: 'Nếu em cố gắng, thì em sẽ đạt điểm cao.'"},
+        {q:"Câu 'Mặc dù trời mưa, chúng em vẫn đi học.' – loại câu?",o:["Câu đơn","Câu ghép tương phản","Câu ghép điều kiện","Câu cảm"],a:1,e:"'Mặc dù...vẫn' thể hiện tương phản → câu ghép tương phản"},
+        {q:"Chủ ngữ trong 'Vì học chăm, Nam được điểm 10.' là:",o:["Vì học chăm","Nam","được điểm 10","Nam được điểm 10"],a:1,e:"CN: 'Nam' (ai được điểm 10?)"},
+        {q:"Câu nào là câu đơn?",o:["Trời nắng nên em mang ô.","Em học bài và chị nấu cơm.","Con mèo nằm ngủ trên ghế.","Tuy mệt nhưng em vẫn học."],a:2,e:"'Con mèo nằm ngủ trên ghế.' – 1 CN (con mèo) + 1 VN (nằm ngủ) → câu đơn"},
+        {q:"Dấu nào dùng khi liệt kê?",o:["Dấu chấm","Dấu hai chấm","Dấu hỏi","Dấu gạch ngang"],a:1,e:"Dấu hai chấm (:) dùng trước khi liệt kê hoặc trích dẫn"},
+        {q:"Câu ghép dùng 'và' thể hiện quan hệ gì?",o:["Tương phản","Nguyên nhân","Bổ sung","Điều kiện"],a:2,e:"'Và' thể hiện quan hệ bổ sung (thêm vào, liên tiếp)"},
+      ]},
+      {id:"ex4v2",title:"Luyện tập: Từ loại nâng cao",icon:"🔤",diff:"Trung bình",qs:[
+        {q:"'Sông Đà' là danh từ loại gì?",o:["Danh từ chung","Danh từ riêng","Danh từ trừu tượng","Đại từ"],a:1,e:"'Sông Đà' là tên riêng của dòng sông → danh từ riêng"},
+        {q:"Từ nào là danh từ chung?",o:["Hà Nội","Việt Nam","thành phố","Mekong"],a:2,e:"'thành phố' chỉ chung loại đô thị → danh từ chung"},
+        {q:"Cụm động từ trong 'Em đang đọc sách chăm chú.':",o:["Em","đang đọc sách chăm chú","đọc","sách chăm chú"],a:1,e:"Cụm ĐT: 'đang đọc sách chăm chú' (đang=phụ trước; đọc=ĐT; sách chăm chú=phụ sau)"},
+        {q:"'Yêu mến' là động từ loại gì?",o:["Hành động","Trạng thái","Tính chất","Sự vật"],a:1,e:"'yêu mến' không thể hiện ra hành động cụ thể → động từ trạng thái"},
+        {q:"Từ nào là tính từ so sánh?",o:["đẹp","rất đẹp","đẹp nhất","đẹp lắm"],a:2,e:"'đẹp nhất' là so sánh mức độ tuyệt đối (superlative)"},
+        {q:"Danh từ riêng nào viết đúng chính tả?",o:["sông hồng","Sông hồng","Sông Hồng","sông Hồng"],a:2,e:"Danh từ riêng viết hoa tất cả các chữ đầu: 'Sông Hồng'"},
+        {q:"'Các bạn học sinh' – 'các' là từ loại gì?",o:["Danh từ","Động từ","Lượng từ","Tính từ"],a:2,e:"'các' là lượng từ (chỉ số lượng nhiều), đứng trước danh từ"},
+        {q:"Câu nào có cụm tính từ?",o:["Em học bài.","Hoa nở.","Bầu trời rất trong xanh.","Gió thổi."],a:2,e:"'rất trong xanh' = cụm tính từ (rất=phụ trước; trong xanh=TT chính)"},
+      ]},
+      {id:"ex4v3",title:"Luyện tập: Tập làm văn",icon:"📝",diff:"Nâng cao",qs:[
+        {q:"Mở bài nào là mở bài gián tiếp?",o:["Nhà em có nuôi một con chó.","Loài chó từ lâu đã gắn bó với con người. Nhà em cũng nuôi một chú chó nhỏ.","Con chó tên Milu.","Em rất thích con chó nhà em."],a:1,e:"Gián tiếp: dẫn dắt từ ý chung rồi vào cụ thể → Loài chó gắn bó với người → nhà em nuôi chó"},
+        {q:"Từ nối nào thể hiện quan hệ bổ sung?",o:["Nhưng","Tuy nhiên","Hơn nữa","Vì vậy"],a:2,e:"'Hơn nữa' thêm thông tin bổ sung vào ý trước → quan hệ bổ sung"},
+        {q:"Dấu ngoặc kép (\"\") dùng khi:",o:["Kết thúc câu","Trích lời nói trực tiếp","Liệt kê","Ngắt vế câu"],a:1,e:"Dấu ngoặc kép dùng trích dẫn lời nói trực tiếp hoặc tên tác phẩm"},
+        {q:"Đoạn văn miêu tả theo trình tự nào hợp lý nhất?",o:["Từ trong ra ngoài","Ngẫu nhiên","Từ xa đến gần, từ ngoài vào trong","Từ nhỏ đến lớn"],a:2,e:"Miêu tả theo không gian: từ xa → gần, từ ngoài → trong là logic nhất"},
+        {q:"Câu kết bài nên làm gì?",o:["Giới thiệu lại chủ đề","Kể thêm chi tiết mới","Nêu cảm nghĩ, ý nghĩa","Đặt câu hỏi cho người đọc"],a:2,e:"Kết bài: nêu cảm nghĩ, ý nghĩa, bài học → tạo ấn tượng cuối"},
+        {q:"Liên kết câu bằng cách dùng đại từ là:",o:["Lặp từ ngữ","Dùng 'anh ấy/cô ấy' thay cho tên","Thêm từ nối","Bỏ chủ ngữ"],a:1,e:"Dùng đại từ: thay tên nhân vật bằng 'cậu ấy, em ấy, anh ấy' để tránh lặp"},
+        {q:"Văn miêu tả và văn kể chuyện khác nhau ở điểm gì chính?",o:["Độ dài","Miêu tả tái hiện sự vật; kể chuyện kể sự việc theo thời gian","Số lượng nhân vật","Cách dùng dấu câu"],a:1,e:"Miêu tả: tái hiện hình ảnh sự vật. Kể chuyện: diễn biến theo thời gian có mở-thân-kết"},
+        {q:"Từ nào thể hiện quan hệ tương phản?",o:["và","vì","nhưng","để"],a:2,e:"'nhưng' thể hiện tương phản (đối lập với ý trước)"},
+      ]},
+    ],
+    exams:[
+      {id:"e4v_gk1",title:"Giữa Kỳ 1 – Tiếng Việt Lớp 4",dur:40,sem:"HK1",
+       passage:"Bài đọc: CÂY ĐA LÀNG\nCây đa cổ thụ đứng sừng sững giữa sân đình làng em từ hàng trăm năm nay. Thân cây to lớn đến mức ba người ôm mới xuể. Tán lá xanh mướt như một chiếc ô khổng lồ che mát cả một góc sân. Mỗi chiều hè, trẻ em trong làng lại tụ tập dưới gốc đa chơi đùa, nghe các cụ kể chuyện ngày xưa. Cây đa đã chứng kiến bao thăng trầm của làng quê và trở thành biểu tượng gắn bó của người dân nơi đây.",
+       qs:[
+        {q:"Cây đa đứng ở đâu?",o:["Giữa đồng lúa","Giữa sân đình làng","Bên bờ sông","Trong vườn nhà"],a:1,e:"'Cây đa cổ thụ đứng sừng sững giữa sân đình làng em'"},
+        {q:"'Sừng sững' là từ loại gì?",o:["Danh từ","Động từ","Tính từ/Từ láy","Đại từ"],a:2,e:"'sừng sững' là từ láy, chỉ trạng thái đứng thẳng, vững chắc → tính từ/từ láy"},
+        {q:"Tán lá được so sánh với gì?",o:["Tấm thảm xanh","Chiếc ô khổng lồ","Đám mây xanh","Mái nhà lớn"],a:1,e:"'Tán lá xanh mướt như một chiếc ô khổng lồ'"},
+        {q:"'Cây đa đã chứng kiến bao thăng trầm.' – Biện pháp tu từ?",o:["So sánh","Nhân hóa","Điệp từ","Liệt kê"],a:1,e:"'chứng kiến' là hành động của người, gán cho cây đa → nhân hóa"},
+        {q:"Câu 'Trẻ em tụ tập dưới gốc đa chơi đùa.' – Câu kể loại gì?",o:["Ai là gì?","Ai thế nào?","Ai làm gì?","Câu ghép"],a:2,e:"VN là ĐT 'tụ tập... chơi đùa' → Câu kể 'Ai làm gì?'"},
+        {q:"'Làng quê' là danh từ loại gì?",o:["Danh từ riêng","Danh từ chung","Động từ","Tính từ"],a:1,e:"'làng quê' không phải tên riêng, chỉ chung loại → danh từ chung"},
+        {q:"Câu 'Thân cây to lớn đến mức ba người ôm mới xuể.' – loại câu?",o:["Câu đơn","Câu ghép","Câu hỏi","Câu cảm"],a:0,e:"Một cụm CN-VN → câu đơn (Thân cây/to lớn đến mức...)"},
+        {q:"Từ đồng nghĩa với 'cổ thụ':",o:["cây non","cây già lâu năm","cây nhỏ","cây trồng mới"],a:1,e:"'cổ thụ' = cây lớn sống lâu năm"},
+        {q:"Điền vào: '...ứng sững'",o:["sừng sững","xừng sững","rừng sững","tứng sững"],a:0,e:"'sừng sững' đúng chính tả – chỉ trạng thái đứng thẳng vững"},
+        {q:"Ý nghĩa của cây đa với làng là:",o:["Chỉ để lấy bóng mát","Biểu tượng gắn bó lâu đời của người dân","Nơi trẻ em học bài","Nơi bán hàng họp chợ"],a:1,e:"'trở thành biểu tượng gắn bó của người dân nơi đây'"},
+      ]},
+      {id:"e4v_ck1",title:"Cuối Kỳ 1 – Tiếng Việt Lớp 4",dur:40,sem:"HK1",qs:[
+        {q:"Câu ghép nào đúng?",o:["Mưa rơi.","Gió thổi mạnh nên cây cối đung đưa.","Trời xanh.","Em học bài."],a:1,e:"'Gió thổi mạnh nên cây cối đung đưa.' – 2 cụm CN-VN, có quan hệ từ 'nên' → câu ghép"},
+        {q:"Danh từ riêng nào viết sai?",o:["Hồ Tây","Sông hồng","Trường Sơn","Vịnh Hạ Long"],a:1,e:"'Sông hồng' sai → phải là 'Sông Hồng' (danh từ riêng viết hoa hết)"},
+        {q:"Điền quan hệ từ: '... trời mưa, ... chúng em vẫn đến trường.'",o:["Vì...nên","Nếu...thì","Tuy...nhưng","Và...còn"],a:2,e:"Tương phản: 'Tuy trời mưa, nhưng chúng em vẫn đến trường.'"},
+        {q:"'Đang bay vút lên cao' là cụm:",o:["Cụm danh từ","Cụm động từ","Cụm tính từ","Câu đơn"],a:1,e:"'đang bay vút lên cao' = cụm động từ (đang=phụ trước; bay=ĐT; vút lên cao=phụ sau)"},
+        {q:"Mở bài gián tiếp nghĩa là:",o:["Mở bài ngắn","Dẫn dắt từ ý liên quan rồi vào chủ đề","Mở bài vào thẳng chủ đề","Mở bài bằng câu hỏi"],a:1,e:"Gián tiếp: nêu ý khái quát liên quan → dẫn vào chủ đề cụ thể"},
+        {q:"Câu 'Rừng núi trùng điệp, hùng vĩ.' – Vị ngữ là:",o:["Rừng núi","trùng điệp hùng vĩ","trùng điệp, hùng vĩ","hùng vĩ"],a:2,e:"VN: 'trùng điệp, hùng vĩ' (rừng núi thế nào?)"},
+        {q:"Dấu gạch ngang (—) dùng để:",o:["Kết thúc câu","Đánh dấu lời thoại trực tiếp","Ngăn vế câu","Hỏi"],a:1,e:"Dấu gạch ngang đứng đầu lời thoại trực tiếp trong văn"},
+        {q:"Từ nào là từ láy: 'rì rào, xa xôi, đơn giản, thân thiện'?",o:["rì rào","xa xôi","đơn giản","thân thiện"],a:0,e:"'rì rào' – láy phụ âm đầu 'r', gợi tiếng gió hay tiếng sóng → từ láy"},
+        {q:"Câu 'Vì mải chơi nên Nam quên làm bài.' – Quan hệ?",o:["Tương phản","Điều kiện","Nguyên nhân-kết quả","Bổ sung"],a:2,e:"'Vì...nên' = nguyên nhân (mải chơi) → kết quả (quên làm bài)"},
+        {q:"Liên kết câu bằng cách lặp từ ngữ nghĩa là:",o:["Viết lại toàn bộ câu trước","Lặp lại từ then chốt từ câu trước ở câu sau","Dùng từ đồng nghĩa","Bỏ chủ ngữ"],a:1,e:"Lặp từ ngữ: dùng lại từ khóa ở câu trước để liên kết câu"},
+      ]},
+      {id:"e4v_gk2",title:"Giữa Kỳ 2 – Tiếng Việt Lớp 4",dur:40,sem:"HK2",
+       passage:"Bài đọc: ĐÊM TRĂNG RẰM\nĐêm rằm tháng tám, trăng tròn vành vạnh sáng soi khắp mặt đất. Ánh trăng bạc phủ lên những mái nhà, những vòm cây, những con đường làng một màu huyền ảo. Trẻ em kéo nhau ra sân phá cỗ, rước đèn vui vẻ. Tiếng trống lân, tiếng reo hò vang lên náo nức. Mẹ ngồi bên hiên nhà mỉm cười nhìn đàn con nô đùa. Đêm Trung Thu là kỷ niệm đẹp trong lòng mỗi đứa trẻ.",
+       qs:[
+        {q:"Đêm rằm được tả vào dịp nào?",o:["Tết Nguyên Đán","Tết Trung Thu","Tết Đoan Ngọ","Ngày khai trường"],a:1,e:"'rằm tháng tám', 'Đêm Trung Thu' → Tết Trung Thu"},
+        {q:"'Vành vạnh' là từ loại gì?",o:["Danh từ","Động từ","Từ láy (tính từ)","Quan hệ từ"],a:2,e:"'vành vạnh' là từ láy, chỉ hình dáng tròn đầy → từ láy/tính từ"},
+        {q:"Ánh trăng phủ lên những gì?",o:["Chỉ mái nhà","Mái nhà, vòm cây, con đường làng","Chỉ vòm cây","Chỉ con đường làng"],a:1,e:"'phủ lên những mái nhà, những vòm cây, những con đường làng'"},
+        {q:"'Mẹ mỉm cười nhìn đàn con.' – Câu kể loại gì?",o:["Ai là gì?","Ai thế nào?","Ai làm gì?","Câu ghép"],a:2,e:"VN là ĐT 'mỉm cười nhìn' → Câu kể 'Ai làm gì?'"},
+        {q:"Câu 'Tiếng trống lân, tiếng reo hò vang lên náo nức.' – Câu gì?",o:["Câu đơn","Câu ghép","Câu hỏi","Câu cảm"],a:1,e:"2 cụm chủ vị (tiếng trống/vang; tiếng reo hò/vang) → câu ghép"},
+        {q:"Điền vào: '...uyền ảo'",o:["guyền ảo","huyền ảo","nuyền ảo","kuyền ảo"],a:1,e:"'huyền ảo' – hu+yền = huyền (mờ ảo, kỳ bí)"},
+        {q:"'Náo nức' là từ láy loại gì?",o:["Láy hoàn toàn","Láy phụ âm đầu","Láy vần","Không phải từ láy"],a:1,e:"'náo nức' – phụ âm đầu 'n' lặp lại → láy phụ âm đầu"},
+        {q:"Từ đồng nghĩa với 'huyền ảo':",o:["rõ ràng","kỳ diệu","bình thường","sáng sủa"],a:1,e:"'kỳ diệu' gần nghĩa với 'huyền ảo' (mờ ảo, kỳ bí)"},
+        {q:"Biện pháp tu từ trong 'Ánh trăng bạc phủ lên mái nhà.':",o:["So sánh","Nhân hóa","Điệp từ","Không có"],a:1,e:"'phủ lên' là hành động của người, gán cho ánh trăng → nhân hóa"},
+        {q:"Đêm Trung Thu có ý nghĩa gì?",o:["Chỉ để phá cỗ","Kỷ niệm đẹp trong lòng mỗi đứa trẻ","Chỉ dành cho người lớn","Để cầu nguyện"],a:1,e:"'Đêm Trung Thu là kỷ niệm đẹp trong lòng mỗi đứa trẻ.'"},
+      ]},
+      {id:"e4v_ck2",title:"Cuối Kỳ 2 – Tiếng Việt Lớp 4",dur:40,sem:"HK2",qs:[
+        {q:"Câu ghép 'Nếu chăm học, bạn sẽ tiến bộ.' thể hiện quan hệ gì?",o:["Nguyên nhân-kết quả","Điều kiện-kết quả","Tương phản","Bổ sung"],a:1,e:"'Nếu...thì' (ẩn) = điều kiện (chăm học) → kết quả (tiến bộ)"},
+        {q:"Từ nào là danh từ riêng?",o:["trường học","thành phố","Trường Tiểu học Lê Quý Đôn","học sinh"],a:2,e:"Tên riêng của ngôi trường → danh từ riêng, viết hoa"},
+        {q:"Mở bài trực tiếp của văn miêu tả cây hoa là:",o:["Mùa xuân, trăm hoa đua nở. Trong đó, em yêu nhất hoa mai.","Nhà em có trồng một cây hoa mai trước sân.","Hoa mai là loài hoa đẹp.","Nhiều người thích hoa mai."],a:1,e:"Trực tiếp: vào thẳng chủ đề → 'Nhà em có trồng một cây hoa mai...'"},
+        {q:"'Rì rào' gợi hình ảnh hoặc âm thanh gì?",o:["Ánh sáng lóe lên","Tiếng gió, tiếng sóng nhẹ nhàng","Tiếng ồn ào","Màu xanh của lá"],a:1,e:"'rì rào' là từ láy gợi âm thanh nhẹ nhàng của gió hoặc sóng"},
+        {q:"Dấu chấm lửng (...) thường dùng để:",o:["Kết thúc câu","Tạo chỗ ngừng, bỏ lửng ý","Liệt kê","Trích dẫn"],a:1,e:"Dấu chấm lửng tạo cảm giác bỏ lửng, chưa nói hết, ngừng ngập"},
+        {q:"Liên kết đoạn bằng từ nối, từ nào thể hiện kết luận?",o:["Hơn nữa","Tuy nhiên","Tóm lại","Bên cạnh đó"],a:2,e:"'Tóm lại' thể hiện kết luận, tổng kết ý → liên kết đoạn kết"},
+        {q:"Câu nào không phải câu ghép?",o:["Trời nắng nên em mang mũ.","Em vừa học vừa nghe nhạc.","Hoa đào nở rộ.","Mưa to và gió thổi mạnh."],a:2,e:"'Hoa đào nở rộ.' – 1 CN + 1 VN → câu đơn"},
+        {q:"'Vì...nên' và 'do...nên' thể hiện cùng quan hệ gì?",o:["Tương phản","Nguyên nhân-kết quả","Điều kiện","Bổ sung"],a:1,e:"Cả hai đều biểu thị nguyên nhân → kết quả"},
+        {q:"Từ 'mặc dù' trong câu ghép thể hiện:",o:["Nguyên nhân","Bổ sung","Tương phản","Điều kiện"],a:2,e:"'Mặc dù...nhưng' = tương phản (dù có điều không thuận lợi nhưng vẫn xảy ra)"},
+        {q:"Kết bài mở rộng khác kết bài không mở rộng ở điểm gì?",o:["Độ dài","Mở rộng thêm ý nghĩa, liên hệ thực tế hoặc bài học","Dùng câu cảm","Tóm tắt lại bài"],a:1,e:"Kết bài mở rộng: nêu thêm ý nghĩa, liên hệ bản thân hoặc bài học rút ra"},
+      ]},
+    ],
+  },
+};
+
+const CURRICULUM = {
+  grade2: GRADE2,
+  grade3: GRADE3,
+  grade4: GRADE4,
+};
+
+// ================================================================
+// NAVBAR
+// ================================================================
+function Navbar({page, grade, subject, goBack, nav}) {
+  const gradeData = grade ? CURRICULUM[grade] : null;
+  const subjectData = (grade && subject) ? CURRICULUM[grade][subject] : null;
+  const showBack = page !== 'home';
+  return (
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {showBack && (
+            <button onClick={goBack} className="text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 text-sm">
+              ← Quay lại
+            </button>
+          )}
+          <button onClick={()=>nav('home')} className="font-bold text-lg text-indigo-700 flex items-center gap-2">
+            🌈 Học Tốt Tiểu Học
+          </button>
+        </div>
+        {gradeData && (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-semibold">{gradeData.label}</span>
+            {subjectData && <span className="bg-pink-100 text-pink-700 px-2 py-1 rounded-full font-semibold">{subjectData.label}</span>}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+// ================================================================
+// HOME PAGE
+// ================================================================
+function HomePage({nav}) {
+  const grades = [
+    {key:'grade2', label:'Lớp 2', icon:'🌟', color:'from-pink-400 to-rose-500', desc:'Số đến 1000 · Nhân chia cơ bản · Chính tả · Tập làm văn'},
+    {key:'grade3', label:'Lớp 3', icon:'⭐', color:'from-blue-400 to-cyan-500', desc:'Số đến 10 000 · Phân số · Từ láy · Câu kể'},
+    {key:'grade4', label:'Lớp 4', icon:'🏆', color:'from-green-400 to-teal-500', desc:'Số triệu · Phân số · Câu ghép · Văn miêu tả'},
+  ];
+  return (
+    <div className="fade-up">
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white py-14 px-4 text-center">
+        <div className="text-6xl mb-4">📚</div>
+        <h1 className="text-4xl font-extrabold mb-3">Học Tốt Tiểu Học</h1>
+        <p className="text-xl opacity-90 mb-2">Chương trình <strong>Chân Trời Sáng Tạo</strong></p>
+        <p className="opacity-80 text-base">Lý thuyết · Bài tập · Đề thi Giữa kỳ &amp; Cuối kỳ</p>
+        <div className="flex justify-center gap-6 mt-6 text-sm opacity-90">
+          <span>✅ 6 môn học</span>
+          <span>✅ 24 đề thi</span>
+          <span>✅ Tự chấm điểm</span>
+        </div>
+      </div>
+      {/* Grade cards */}
+      <div className="max-w-3xl mx-auto px-4 py-10">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">👇 Chọn lớp học</h2>
+        <div className="grid gap-5">
+          {grades.map(g => (
+            <button key={g.key} onClick={()=>nav('subject',{grade:g.key})}
+              className={`card-hover bg-gradient-to-r ${g.color} text-white rounded-2xl p-6 flex items-center gap-5 shadow-lg text-left w-full`}>
+              <span className="text-5xl">{g.icon}</span>
+              <div>
+                <div className="text-2xl font-extrabold">{g.label}</div>
+                <div className="text-sm opacity-90 mt-1">{g.desc}</div>
+              </div>
+              <span className="ml-auto text-3xl opacity-70">›</span>
+            </button>
+          ))}
+        </div>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mt-10">
+          {[['📖','Lý thuyết','15+ chủ đề'],['✏️','Bài tập','30+ bộ bài'],['🏆','Đề thi','24 đề']].map(([ic,lb,val])=>(
+            <div key={lb} className="bg-white rounded-xl p-4 text-center shadow">
+              <div className="text-3xl mb-1">{ic}</div>
+              <div className="font-bold text-gray-700">{lb}</div>
+              <div className="text-indigo-600 font-semibold text-sm">{val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// SUBJECT PAGE
+// ================================================================
+function SubjectPage({grade, nav}) {
+  const g = CURRICULUM[grade];
+  const subjects = [
+    {key:'math', icon:'📐', color:'from-orange-400 to-yellow-400', desc:'Lý thuyết · Bài tập · 4 đề thi'},
+    {key:'vietnamese', icon:'📖', color:'from-purple-400 to-pink-400', desc:'Lý thuyết · Bài tập · 4 đề thi'},
+  ];
+  return (
+    <div className="fade-up max-w-xl mx-auto px-4 py-10">
+      <div className="text-center mb-8">
+        <span className="text-5xl">{g.icon}</span>
+        <h2 className="text-3xl font-extrabold text-gray-800 mt-3">{g.label}</h2>
+        <p className="text-gray-500 mt-1">Chọn môn học</p>
+      </div>
+      <div className="grid gap-5">
+        {subjects.map(s => {
+          const sub = g[s.key];
+          return (
+            <button key={s.key} onClick={()=>nav('content',{grade,subject:s.key})}
+              className={`card-hover bg-gradient-to-r ${s.color} text-white rounded-2xl p-7 flex items-center gap-5 shadow-lg text-left w-full`}>
+              <span className="text-5xl">{s.icon}</span>
+              <div>
+                <div className="text-2xl font-extrabold">{sub.label}</div>
+                <div className="text-sm opacity-90 mt-1">{s.desc}</div>
+              </div>
+              <span className="ml-auto text-3xl opacity-70">›</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// CONTENT PAGE (choose theory / exercise / exam)
+// ================================================================
+function ContentPage({grade, subject, nav}) {
+  const g = CURRICULUM[grade];
+  const sub = g[subject];
+  const types = [
+    {key:'theory', icon:'📖', label:'Lý thuyết', color:'from-blue-400 to-indigo-500',
+      desc:`${sub.theory.length} chủ đề · Tóm tắt + Ví dụ + Mẹo nhớ`, count: sub.theory.length},
+    {key:'exercise', icon:'✏️', label:'Bài tập', color:'from-green-400 to-teal-500',
+      desc:`${sub.exercises.length} bộ bài · Trắc nghiệm tự chấm điểm`, count: sub.exercises.length},
+    {key:'exam', icon:'🏆', label:'Đề thi', color:'from-orange-400 to-red-400',
+      desc:`${sub.exams.length} đề · Giữa kỳ & Cuối kỳ · Đồng hồ đếm ngược`, count: sub.exams.length},
+  ];
+  return (
+    <div className="fade-up max-w-xl mx-auto px-4 py-10">
+      <div className="text-center mb-8">
+        <span className="text-5xl">{sub.icon}</span>
+        <h2 className="text-3xl font-extrabold text-gray-800 mt-3">{g.label} – {sub.label}</h2>
+        <p className="text-gray-500 mt-1">Chọn loại học tập</p>
+      </div>
+      <div className="grid gap-5">
+        {types.map(t => (
+          <button key={t.key} onClick={()=>nav(t.key,{grade,subject})}
+            className={`card-hover bg-gradient-to-r ${t.color} text-white rounded-2xl p-6 flex items-center gap-5 shadow-lg text-left w-full`}>
+            <span className="text-5xl">{t.icon}</span>
+            <div>
+              <div className="text-2xl font-extrabold">{t.label}</div>
+              <div className="text-sm opacity-90 mt-1">{t.desc}</div>
+            </div>
+            <span className="ml-auto text-3xl opacity-70">›</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// THEORY PAGE
+// ================================================================
+function TheoryPage({grade, subject, nav}) {
+  const sub = CURRICULUM[grade][subject];
+  const [open, setOpen] = useState(null);
+  return (
+    <div className="fade-up max-w-2xl mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <span className="text-4xl">📖</span>
+        <h2 className="text-2xl font-extrabold text-gray-800 mt-2">Lý thuyết – {sub.label}</h2>
+        <p className="text-gray-500 text-sm mt-1">{CURRICULUM[grade].label}</p>
+      </div>
+      <div className="space-y-3">
+        {sub.theory.map((t,i) => (
+          <div key={t.id} className="bg-white rounded-2xl shadow overflow-hidden">
+            <button className="w-full text-left px-5 py-4 flex items-center gap-3 hover:bg-gray-50 transition"
+              onClick={()=>setOpen(open===i?null:i)}>
+              <span className="text-2xl">{t.icon}</span>
+              <span className="font-bold text-gray-800 flex-1">{t.title}</span>
+              <span className="text-gray-400 text-xl">{open===i?'▲':'▼'}</span>
+            </button>
+            {open===i && (
+              <div className="px-5 pb-5 pop">
+                {/* Content sections */}
+                {t.content.map((c,j)=>(
+                  <div key={j} className="mb-4">
+                    <div className="font-semibold text-indigo-700 mb-1">▸ {c.h}</div>
+                    <div className="text-gray-700 text-sm bg-indigo-50 rounded-xl p-3 leading-relaxed">{c.t}</div>
+                  </div>
+                ))}
+                {/* Tips */}
+                {t.tips && t.tips.length>0 && (
+                  <div className="bg-yellow-50 rounded-xl p-3 mb-4">
+                    <div className="font-semibold text-yellow-700 mb-2">💡 Mẹo nhớ</div>
+                    {t.tips.map((tip,k)=>(
+                      <div key={k} className="text-sm text-yellow-800 flex gap-2">
+                        <span>•</span><span>{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Examples */}
+                {t.ex && t.ex.length>0 && (
+                  <div className="bg-green-50 rounded-xl p-3">
+                    <div className="font-semibold text-green-700 mb-2">✏️ Ví dụ</div>
+                    {t.ex.map((e,k)=>(
+                      <div key={k} className="mb-2 text-sm">
+                        <span className="text-gray-700">❓ {e.q}</span>
+                        <div className="text-green-700 font-semibold ml-4">→ {e.a}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// EXERCISE PAGE – list + quiz
+// ================================================================
+function ExercisePage({grade, subject, nav}) {
+  const sub = CURRICULUM[grade][subject];
+  const [selected, setSelected] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const startExercise = (ex) => {
+    setSelected(ex);
+    setAnswers({});
+    setSubmitted(false);
+    window.scrollTo(0,0);
+  };
+
+  if (!selected) {
+    return (
+      <div className="fade-up max-w-xl mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <span className="text-4xl">✏️</span>
+          <h2 className="text-2xl font-extrabold text-gray-800 mt-2">Bài tập – {sub.label}</h2>
+          <p className="text-gray-500 text-sm mt-1">{CURRICULUM[grade].label} · Chọn bộ bài tập</p>
+        </div>
+        <div className="space-y-4">
+          {sub.exercises.map(ex=>(
+            <button key={ex.id} onClick={()=>startExercise(ex)}
+              className="card-hover w-full bg-white rounded-2xl p-5 shadow flex items-center gap-4 text-left">
+              <span className="text-3xl">{ex.icon}</span>
+              <div className="flex-1">
+                <div className="font-bold text-gray-800">{ex.title}</div>
+                <div className="text-sm text-gray-500 mt-1">{ex.qs.length} câu · {ex.diff}</div>
+              </div>
+              <span className="bg-indigo-100 text-indigo-700 rounded-full px-3 py-1 text-sm font-semibold">Làm bài →</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const score = submitted ? selected.qs.filter((q,i)=>answers[i]===q.a).length : 0;
+  const total = selected.qs.length;
+  const pct = submitted ? Math.round(score/total*100) : 0;
+
+  return (
+    <div className="fade-up max-w-2xl mx-auto px-4 py-8">
+      <div className="bg-white rounded-2xl shadow p-5 mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <span className="text-2xl">{selected.icon}</span>
+          <h3 className="font-extrabold text-xl text-gray-800">{selected.title}</h3>
+        </div>
+        <p className="text-sm text-gray-500">{total} câu · {selected.diff}</p>
+        {submitted && (
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 flex items-center gap-4">
+            <ScoreCircle score={score} total={total}/>
+            <div>
+              <div className="text-2xl font-extrabold text-indigo-700">{score}/{total} câu đúng</div>
+              <div className="text-lg font-bold text-gray-700">{pct}% · {getRank(score,total)}</div>
+              <button onClick={()=>{setAnswers({});setSubmitted(false);}} className="mt-2 text-sm text-indigo-600 underline">Làm lại</button>
+              <button onClick={()=>setSelected(null)} className="mt-2 ml-4 text-sm text-gray-500 underline">Chọn bộ khác</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-5">
+        {selected.qs.map((q,i)=>{
+          const ans = answers[i];
+          const done = ans !== undefined;
+          const correct = done && ans === q.a;
+          return (
+            <div key={i} className="bg-white rounded-2xl shadow p-5">
+              <div className="font-semibold text-gray-800 mb-3">
+                <span className="text-indigo-600 font-bold mr-2">Câu {i+1}.</span>{q.q}
+              </div>
+              <div className="space-y-2">
+                {q.o.map((opt,j)=>{
+                  let cls = 'quiz-opt';
+                  if(done || submitted) {
+                    cls += ' done';
+                    if(j===q.a) cls += ' correct';
+                    else if(j===ans && ans!==q.a) cls += ' wrong';
+                  }
+                  return (
+                    <button key={j} className={cls}
+                      onClick={()=>{if(!done && !submitted){setAnswers(prev=>({...prev,[i]:j}));}}}>
+                      <span className="font-semibold text-gray-500 mr-2">{['A','B','C','D'][j]}.</span>
+                      {opt}
+                      {(done||submitted) && j===q.a && <span className="ml-2 text-green-600">✓</span>}
+                      {(done||submitted) && j===ans && ans!==q.a && <span className="ml-2 text-red-500">✗</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {(done || submitted) && (
+                <div className="mt-3 text-sm bg-blue-50 rounded-xl p-3 text-blue-800">
+                  💡 <strong>Giải thích:</strong> {q.e}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {!submitted && Object.keys(answers).length === total && (
+        <div className="mt-6 text-center">
+          <button onClick={()=>{setSubmitted(true);window.scrollTo(0,0);}}
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-10 rounded-2xl text-lg shadow-lg hover:opacity-90 transition">
+            🎯 Nộp bài &amp; xem điểm
+          </button>
+        </div>
+      )}
+      {!submitted && Object.keys(answers).length < total && (
+        <div className="mt-4 text-center text-sm text-gray-500">
+          Đã trả lời {Object.keys(answers).length}/{total} câu
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================================================================
+// EXAM PAGE – timed exam
+// ================================================================
+function ExamPage({grade, subject, nav}) {
+  const sub = CURRICULUM[grade][subject];
+  const [selected, setSelected] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const timerRef = useRef(null);
+
+  const startExam = (exam) => {
+    setSelected(exam);
+    setAnswers({});
+    setSubmitted(false);
+    setTimeLeft(exam.dur * 60);
+    window.scrollTo(0,0);
+  };
+
+  useEffect(()=>{
+    if(selected && !submitted && timeLeft > 0) {
+      timerRef.current = setInterval(()=>{
+        setTimeLeft(t => {
+          if(t <= 1) { clearInterval(timerRef.current); setSubmitted(true); return 0; }
+          return t - 1;
+        });
+      }, 1000);
+    }
+    return ()=>clearInterval(timerRef.current);
+  }, [selected, submitted]);
+
+  const submitExam = () => {
+    clearInterval(timerRef.current);
+    setSubmitted(true);
+    window.scrollTo(0,0);
+  };
+
+  if(!selected) {
+    const semGroups = {HK1:[], HK2:[]};
+    sub.exams.forEach(e => semGroups[e.sem]?.push(e));
+    return (
+      <div className="fade-up max-w-xl mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <span className="text-4xl">🏆</span>
+          <h2 className="text-2xl font-extrabold text-gray-800 mt-2">Đề thi – {sub.label}</h2>
+          <p className="text-gray-500 text-sm mt-1">{CURRICULUM[grade].label} · Chọn đề thi</p>
+        </div>
+        {['HK1','HK2'].map(sem=>(
+          <div key={sem} className="mb-6">
+            <div className="font-bold text-gray-600 mb-3 text-sm uppercase tracking-wide">📅 Học kỳ {sem==='HK1'?'1':'2'}</div>
+            <div className="space-y-3">
+              {semGroups[sem].map(exam=>(
+                <button key={exam.id} onClick={()=>startExam(exam)}
+                  className="card-hover w-full bg-white rounded-2xl p-5 shadow flex items-center gap-4 text-left">
+                  <span className="text-3xl">{exam.title.includes('Giữa')?'📝':'📋'}</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-gray-800">{exam.title}</div>
+                    <div className="text-sm text-gray-500 mt-1">{exam.qs.length} câu · {exam.dur} phút · {exam.totalScore||10} điểm</div>
+                  </div>
+                  <span className="bg-orange-100 text-orange-700 rounded-full px-3 py-1 text-sm font-semibold">Thi →</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const mm = String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const ss = String(timeLeft%60).padStart(2,'0');
+  const isWarn = timeLeft < 300;
+  const score = submitted ? selected.qs.filter((q,i)=>answers[i]===q.a).length : 0;
+  const total = selected.qs.length;
+
+  return (
+    <div className="fade-up max-w-2xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="bg-white rounded-2xl shadow p-5 mb-6 sticky top-16 z-40">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-extrabold text-lg text-gray-800">{selected.title}</h3>
+            <p className="text-sm text-gray-500">{total} câu · {selected.dur} phút</p>
+          </div>
+          {!submitted && (
+            <div className={`text-2xl font-extrabold font-mono ${isWarn?'timer-warn text-red-500':'text-indigo-700'}`}>
+              ⏱ {mm}:{ss}
+            </div>
+          )}
+          {submitted && (
+            <div className="text-right">
+              <div className="text-2xl font-extrabold text-indigo-700">{score}/{total}</div>
+              <div className="text-sm text-gray-500">{getRank(score,total)}</div>
+            </div>
+          )}
+        </div>
+        {submitted && (
+          <div className="mt-4 flex gap-3 flex-wrap">
+            <ScoreCircle score={score} total={total}/>
+            <div className="flex flex-col justify-center">
+              <div className="text-xl font-extrabold text-indigo-700">{score}/{total} câu đúng · {Math.round(score/total*10)}/10 điểm</div>
+              <div className="text-base font-bold text-gray-700">{getStars(score,total)} · {getRank(score,total)}</div>
+              <div className="flex gap-2 mt-2">
+                <button onClick={()=>startExam(selected)} className="text-sm bg-indigo-100 text-indigo-700 rounded-lg px-3 py-1 font-semibold">Thi lại</button>
+                <button onClick={()=>setSelected(null)} className="text-sm bg-gray-100 text-gray-600 rounded-lg px-3 py-1 font-semibold">Chọn đề khác</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Passage (if any) */}
+      {selected.passage && (
+        <div className="bg-amber-50 border-l-4 border-amber-400 rounded-xl p-5 mb-6 text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+          {selected.passage}
+        </div>
+      )}
+
+      {/* Questions */}
+      <div className="space-y-5">
+        {selected.qs.map((q,i)=>{
+          const ans = answers[i];
+          const done = ans !== undefined;
+          return (
+            <div key={i} className="bg-white rounded-2xl shadow p-5">
+              <div className="font-semibold text-gray-800 mb-3">
+                <span className="text-indigo-600 font-bold mr-2">Câu {i+1}.</span>{q.q}
+              </div>
+              <div className="space-y-2">
+                {q.o.map((opt,j)=>{
+                  let cls = 'quiz-opt';
+                  if(submitted) {
+                    cls += ' done';
+                    if(j===q.a) cls += ' correct';
+                    else if(j===ans && ans!==q.a) cls += ' wrong';
+                  } else if(done) {
+                    if(j===ans) cls += ' selected';
+                  }
+                  return (
+                    <button key={j} className={cls}
+                      onClick={()=>{if(!submitted){setAnswers(p=>({...p,[i]:j}));}}}>
+                      <span className="font-semibold text-gray-500 mr-2">{['A','B','C','D'][j]}.</span>
+                      {opt}
+                      {submitted && j===q.a && <span className="ml-2 text-green-600 font-bold">✓</span>}
+                      {submitted && j===ans && ans!==q.a && <span className="ml-2 text-red-500 font-bold">✗</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {submitted && (
+                <div className="mt-3 text-sm bg-blue-50 rounded-xl p-3 text-blue-800">
+                  💡 <strong>Giải thích:</strong> {q.e}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {!submitted && (
+        <div className="mt-8 text-center space-y-2">
+          <div className="text-sm text-gray-500 mb-3">
+            Đã trả lời {Object.keys(answers).length}/{total} câu
+          </div>
+          <button onClick={submitExam}
+            className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-4 px-10 rounded-2xl text-lg shadow-lg hover:opacity-90 transition">
+            🏆 Nộp bài thi
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function ScoreCircle({score, total}) {
+  const pct = Math.round(score/total*100);
+  const color = pct>=80?'#22c55e':pct>=60?'#f59e0b':'#ef4444';
+  return (
+    <div style={{width:70,height:70,borderRadius:'50%',background:`conic-gradient(${color} ${pct}%, #e5e7eb ${pct}%)`,
+      display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+      <div style={{width:54,height:54,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{fontWeight:'800',fontSize:16,color}}>{pct}%</span>
+      </div>
+    </div>
+  );
+}
+
+function getRank(score, total) {
+  const p = score/total;
+  if(p===1) return '🥇 Xuất sắc!';
+  if(p>=0.8) return '🥈 Giỏi';
+  if(p>=0.6) return '🥉 Khá';
+  if(p>=0.4) return '📚 Trung bình';
+  return '💪 Cần cố gắng thêm';
+}
+
+function getStars(score, total) {
+  const p = score/total;
+  if(p===1) return '⭐⭐⭐';
+  if(p>=0.7) return '⭐⭐';
+  return '⭐';
+}
+
+// ================================================================
+// APP (main router)
+// ================================================================
+function App() {
+  const [page, setPage] = useState('home');
+  const [grade, setGrade] = useState(null);
+  const [subject, setSubject] = useState(null);
+
+  const nav = (p, opts={}) => {
+    setPage(p);
+    if(opts.grade !== undefined) setGrade(opts.grade);
+    if(opts.subject !== undefined) setSubject(opts.subject);
+    window.scrollTo(0,0);
+  };
+
+  const goBack = () => {
+    if(page==='subject') nav('home');
+    else if(page==='content') nav('subject',{grade,subject:null});
+    else if(page==='theory'||page==='exercise'||page==='exam') nav('content',{grade,subject});
+    else nav('home');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar page={page} grade={grade} subject={subject} goBack={goBack} nav={nav}/>
+      {page==='home' && <HomePage nav={nav}/>}
+      {page==='subject' && <SubjectPage grade={grade} nav={nav}/>}
+      {page==='content' && <ContentPage grade={grade} subject={subject} nav={nav}/>}
+      {page==='theory' && <TheoryPage grade={grade} subject={subject} nav={nav}/>}
+      {page==='exercise' && <ExercisePage grade={grade} subject={subject} nav={nav}/>}
+      {page==='exam' && <ExamPage grade={grade} subject={subject} nav={nav}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>
