@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lời Hay Cho Bé An Nhiên 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FF6B9D;
+    --purple: #C77DFF;
+    --yellow: #FFD166;
+    --mint: #06D6A0;
+    --sky: #118AB2;
+    --peach: #FF9A8B;
+    --bg: #FFF5F9;
+    --card-shadow: 0 8px 32px rgba(255,107,157,0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Floating stars background */
+  .stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    font-size: 1.2rem;
+    animation: floatStar linear infinite;
+    opacity: 0.5;
+  }
+
+  @keyframes floatStar {
+    0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.5; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 16px 60px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: popIn 0.7s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .header .avatar {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 4px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .header h1 {
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  .header p {
+    color: #b06a8a;
+    font-size: 1rem;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .tab {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.25s;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .tab[data-topic="family"] { color: var(--pink); border-color: var(--pink); }
+  .tab[data-topic="focus"]  { color: var(--sky);  border-color: var(--sky); }
+  .tab[data-topic="neat"]   { color: var(--mint); border-color: var(--mint); }
+
+  .tab.active[data-topic="family"] { background: var(--pink); color: white; }
+  .tab.active[data-topic="focus"]  { background: var(--sky);  color: white; }
+  .tab.active[data-topic="neat"]   { background: var(--mint); color: white; }
+
+  .tab:hover { transform: scale(1.06); }
+
+  /* Quote card */
+  .quote-card {
+    background: white;
+    border-radius: 28px;
+    padding: 36px 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(.34,1.56,.64,1) both;
+    border-top: 6px solid var(--pink);
+  }
+  .quote-card.topic-focus { border-top-color: var(--sky); }
+  .quote-card.topic-neat  { border-top-color: var(--mint); }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .quote-icon {
+    font-size: 2.8rem;
+    margin-bottom: 14px;
+  }
+  .quote-number {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ccc;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .quote-text {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .quote-note {
+    font-size: 0.92rem;
+    color: #999;
+    font-style: italic;
+    max-width: 480px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover { transform: scale(1.06); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-play {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white;
+    box-shadow: 0 6px 20px rgba(199,125,255,0.35);
+    min-width: 160px;
+    justify-content: center;
+  }
+  .btn-play.playing {
+    background: linear-gradient(135deg, var(--peach), var(--yellow));
+  }
+  .btn-prev, .btn-next {
+    background: white;
+    color: #555;
+    border: 2.5px solid #eee;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+  }
+  .btn-auto {
+    background: white;
+    color: var(--purple);
+    border: 2.5px solid var(--purple);
+    font-size: 0.95rem;
+  }
+  .btn-auto.on {
+    background: var(--purple);
+    color: white;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .progress-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #f0e6f0;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--purple));
+    border-radius: 99px;
+    transition: width 0.4s;
+  }
+  .progress-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #b06a8a;
+    min-width: 50px;
+    text-align: right;
+  }
+
+  /* Speed control */
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: #999;
+    font-weight: 600;
+  }
+  .speed-btn {
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background: white;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #888;
+    transition: all 0.2s;
+  }
+  .speed-btn.active { border-color: var(--pink); color: var(--pink); background: #fff0f6; }
+
+  /* List */
+  .list-toggle {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .btn-list {
+    background: none;
+    border: 2px solid #ddd;
+    color: #aaa;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-list:hover { border-color: var(--pink); color: var(--pink); }
+
+  .quote-list {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 4px 2px;
+  }
+  .quote-list.open { display: flex; }
+  .list-item {
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: white;
+    border: 2px solid #f0e6f0;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #444;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .list-item:hover { border-color: var(--pink); background: #fff5f9; }
+  .list-item.active { border-color: var(--pink); background: #fff0f6; color: var(--pink); }
+  .list-num { color: #ddd; font-size: 0.8rem; min-width: 28px; font-weight: 700; margin-top: 2px; }
+
+  /* Wave animation while playing */
+  .wave {
+    display: none;
+    gap: 4px;
+    align-items: flex-end;
+    height: 28px;
+    margin: 0 auto 8px;
+  }
+  .wave.show { display: flex; }
+  .wave span {
+    display: block;
+    width: 5px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--pink), var(--purple));
+    animation: waveBar 0.9s ease-in-out infinite;
+  }
+  .wave span:nth-child(2) { animation-delay: 0.15s; }
+  .wave span:nth-child(3) { animation-delay: 0.30s; }
+  .wave span:nth-child(4) { animation-delay: 0.45s; }
+  .wave span:nth-child(5) { animation-delay: 0.60s; }
+  @keyframes waveBar {
+    0%,100% { height: 6px; }
+    50% { height: 26px; }
+  }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .quote-text { font-size: 1.2rem; }
+    .header h1 { font-size: 1.7rem; }
+    .btn { font-size: 0.95rem; padding: 11px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="wrapper">
+  <div class="header">
+    <span class="avatar">🌸</span>
+    <h1>Lời Hay Cho Bé An Nhiên</h1>
+    <p>Mỗi ngày một câu hay — con gái ba thật tuyệt vời! ✨</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-topic="family" onclick="switchTopic('family')">💕 Yêu Thương Gia Đình</button>
+    <button class="tab" data-topic="focus" onclick="switchTopic('focus')">🎯 Tập Trung Chú Ý</button>
+    <button class="tab" data-topic="neat" onclick="switchTopic('neat')">✨ Ngăn Nắp Gọn Gàng</button>
+  </div>
+
+  <div class="quote-card" id="quoteCard">
+    <div class="wave" id="wave">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="quote-icon" id="quoteIcon">💕</div>
+    <div class="quote-number" id="quoteNumber">CÂU 1 / 50</div>
+    <div class="quote-text" id="quoteText">Đang tải câu hay...</div>
+    <div class="quote-note" id="quoteNote"></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar" id="progressBar" style="width:2%"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">1 / 50</div>
+  </div>
+
+  <div class="speed-row">
+    Tốc độ đọc:
+    <button class="speed-btn" onclick="setSpeed(0.75)">Chậm</button>
+    <button class="speed-btn active" onclick="setSpeed(0.9)">Vừa</button>
+    <button class="speed-btn" onclick="setSpeed(1.1)">Nhanh</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-prev" onclick="prevQuote()">◀ Trước</button>
+    <button class="btn btn-play" id="btnPlay" onclick="togglePlay()">▶ Đọc Câu Này</button>
+    <button class="btn btn-next" onclick="nextQuote()">Tiếp ▶</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-auto" id="btnAuto" onclick="toggleAuto()">🔄 Tự động chuyển</button>
+  </div>
+
+  <div class="list-toggle">
+    <button class="btn-list" onclick="toggleList()">📋 Xem toàn bộ câu</button>
+  </div>
+  <div class="quote-list" id="quoteList"></div>
+</div>
+
+<script>
+const DATA = {
+  family: {
+    icon: '💕',
+    color: '#FF6B9D',
+    cardClass: 'topic-family',
+    quotes: [
+      { text: "Gia đình là nơi trái tim luôn được về nhà.", note: "An Nhiên luôn có ba mẹ bên cạnh nhé!" },
+      { text: "Ba mẹ yêu con nhiều hơn tất cả mọi thứ trên đời.", note: "Tình yêu của ba mẹ không bao giờ cạn." },
+      { text: "Mỗi nụ cười của con là món quà quý nhất với ba mẹ.", note: "Con hãy cười thật nhiều nhé!" },
+      { text: "Yêu thương gia đình là điều làm cho trái tim ấm áp nhất.", note: "Hãy ôm ba mẹ một cái thật chặt hôm nay!" },
+      { text: "Những bữa cơm cùng gia đình là những khoảnh khắc đẹp nhất.", note: "Cùng ăn cơm vui vẻ với cả nhà nhé!" },
+      { text: "Con được yêu thương từ khi chưa ra đời — và mãi mãi như vậy.", note: "Ba mẹ yêu An Nhiên vô điều kiện." },
+      { text: "Giúp đỡ ba mẹ một việc nhỏ mỗi ngày là cách nói 'con yêu ba mẹ'.", note: "Hôm nay con giúp ba mẹ việc gì nhé?" },
+      { text: "Nhà mình là nơi an toàn nhất trên thế giới.", note: "Dù đi đâu, con vẫn có nhà để về." },
+      { text: "Anh chị em là những người bạn đặc biệt nhất của con.", note: "Hãy yêu thương và chia sẻ cùng anh chị em." },
+      { text: "Lời nói yêu thương làm cho gia đình thêm hạnh phúc.", note: "Hãy nói 'con yêu ba mẹ' mỗi ngày nhé!" },
+      { text: "Ông bà là kho tàng yêu thương vô tận của gia đình.", note: "Hãy thăm và hỏi thăm ông bà thường xuyên." },
+      { text: "Mỗi ngày được sống cùng gia đình là một món quà.", note: "Trân trọng từng khoảnh khắc bên ba mẹ nhé!" },
+      { text: "Khi con khóc, trái tim ba mẹ cũng đau theo.", note: "Ba mẹ luôn hiểu và yêu thương con." },
+      { text: "Gia đình là nơi ta học được tình yêu đầu tiên.", note: "Tình yêu thương bắt đầu từ mái nhà ta." },
+      { text: "Hãy nói xin lỗi khi làm ba mẹ buồn — đó là dấu hiệu của trái tim đẹp.", note: "Dũng cảm xin lỗi là việc của người có lòng tốt." },
+      { text: "Cùng ba mẹ xem phim, đọc sách — những kỷ niệm đó theo con mãi mãi.", note: "Hãy tận hưởng thời gian bên gia đình!" },
+      { text: "Tiếng cười của cả nhà là âm nhạc hay nhất trên đời.", note: "An Nhiên hãy mang thật nhiều tiếng cười về nhà!" },
+      { text: "Ba mẹ không cần con hoàn hảo — chỉ cần con hạnh phúc và ngoan ngoãn.", note: "Con cứ là chính mình — ba mẹ luôn tự hào về con." },
+      { text: "Khi con biết ơn ba mẹ, trái tim con sẽ luôn bình yên.", note: "Hãy nói lời cảm ơn ba mẹ thường xuyên nhé." },
+      { text: "Một gia đình yêu thương nhau là hạnh phúc lớn nhất cuộc đời.", note: "Nhà mình thật hạnh phúc vì có An Nhiên!" },
+      { text: "Hãy ôm ba mẹ trước khi đi ngủ — đó là cách tốt nhất để kết thúc một ngày.", note: "Đêm nay đừng quên ôm ba mẹ nhé!" },
+      { text: "Con lớn lên từng ngày — ba mẹ trân trọng từng khoảnh khắc đó.", note: "Ba mẹ rất vui khi thấy con khôn lớn." },
+      { text: "Yêu thương là chia sẻ — hãy chia cho nhau những điều tốt đẹp.", note: "Chia sẻ đồ chơi, bánh kẹo với em hay bạn bè nhé." },
+      { text: "Gia đình cùng nhau vượt qua mọi khó khăn — không ai bị bỏ lại phía sau.", note: "Khi gặp khó, con hãy nói với ba mẹ ngay nhé." },
+      { text: "Nụ hôn buổi sáng của ba mẹ là nguồn năng lượng tuyệt vời nhất.", note: "Chào ba mẹ thật to mỗi buổi sáng nhé!" },
+      { text: "Con là điều kỳ diệu nhất ba mẹ có được.", note: "An Nhiên thật đặc biệt trong lòng ba mẹ." },
+      { text: "Khi buồn, hãy tìm đến ba mẹ — họ sẽ luôn ở đây.", note: "Đừng giấu nỗi buồn — ba mẹ sẵn sàng lắng nghe." },
+      { text: "Cùng ba mẹ làm việc nhà là cách học yêu thương qua từng hành động.", note: "Việc nhỏ thôi, nhưng ý nghĩa rất lớn!" },
+      { text: "Ngôi nhà trở nên đẹp hơn vì có tình yêu thương của cả gia đình.", note: "Nhà mình đẹp nhất khi cả nhà đều vui!" },
+      { text: "Ba mẹ sẽ luôn là người đầu tiên tin tưởng vào con.", note: "Hãy tự tin — ba mẹ luôn đứng sau lưng con." },
+      { text: "Gia đình là bức tranh đẹp nhất — và An Nhiên là màu sắc rực rỡ nhất.", note: "Con làm cho gia đình thêm vui và ý nghĩa." },
+      { text: "Mỗi bữa sáng cùng nhau là khởi đầu của một ngày tuyệt vời.", note: "Ăn sáng đầy đủ và hãy nói chuyện vui cùng ba mẹ!" },
+      { text: "Nói 'con yêu ba', 'con yêu mẹ' — ba chữ ngắn nhưng ý nghĩa dài mãi mãi.", note: "Hôm nay con đã nói chưa?" },
+      { text: "Khi con vẽ một bức tranh tặng ba mẹ, đó là tình yêu được vẽ lên giấy.", note: "Vẽ tặng ba mẹ một bức tranh nhé, An Nhiên!" },
+      { text: "Sự có mặt của con làm cho gia đình trọn vẹn.", note: "Con là mảnh ghép quan trọng nhất của gia đình." },
+      { text: "Hãy cảm ơn ba mẹ vì từng bữa ăn ngon, từng giấc ngủ ấm áp.", note: "Những điều nhỏ đó đều có tình yêu của ba mẹ trong đó." },
+      { text: "Tình yêu gia đình không cần lý do — nó chỉ cần tồn tại.", note: "Ba mẹ yêu con không vì lý do gì cả!" },
+      { text: "Con hát cho ba mẹ nghe — đó là món quà không tiền nào mua được.", note: "Hát cho ba mẹ một bài tối nay nhé, An Nhiên!" },
+      { text: "Gia đình yêu thương nhau qua từng ngày bình thường — không cần ngày đặc biệt.", note: "Hôm nay là ngày bình thường — nhưng hãy làm nó trở nên đặc biệt!" },
+      { text: "Khi con lớn lên, điều con nhớ nhất sẽ là những khoảnh khắc ấm áp bên gia đình.", note: "Hãy trân trọng từng ngày được ở bên ba mẹ nhé." },
+      { text: "Ba mẹ cũng từng là đứa trẻ như con — hãy chia sẻ những câu chuyện cùng nhau.", note: "Hỏi ba mẹ kể chuyện hồi nhỏ đi, thú vị lắm!" },
+      { text: "Yêu gia đình là học cách cho đi mà không cần nhận lại.", note: "Làm điều tốt cho ba mẹ mà không cần ba mẹ khen nhé." },
+      { text: "Mỗi đêm trước khi ngủ, hãy nhớ đến điều tốt đẹp ba mẹ đã làm cho con hôm nay.", note: "Ba mẹ yêu con rất nhiều — mỗi ngày đều vậy." },
+      { text: "Gia đình không hoàn hảo — nhưng tình yêu thì hoàn hảo.", note: "Yêu thương nhau dù có lúc không đồng ý — đó mới là gia đình thật sự." },
+      { text: "Mỗi lần con nói 'xin lỗi', 'cảm ơn', 'làm ơn' — ba mẹ tự hào về con lắm.", note: "Lịch sự với ba mẹ là cách yêu thương đơn giản nhất." },
+      { text: "Gia đình là ngôi sao sáng nhất dẫn đường cho con.", note: "Dù đi đâu, nhớ quay về nhà nhé!" },
+      { text: "Con vẽ đẹp, con hát hay — ba mẹ là khán giả hâm mộ số một của con!", note: "Biểu diễn cho ba mẹ xem nhé, An Nhiên!" },
+      { text: "Những lúc khó khăn nhất, gia đình là điểm tựa vững chắc nhất.", note: "Luôn nhớ rằng ba mẹ luôn ở đây vì con." },
+      { text: "Tình yêu của gia đình là hành trang quý giá nhất trong cuộc đời.", note: "Mang theo tình yêu đó đi khắp nơi nhé, An Nhiên!" },
+      { text: "Mỗi ngày cùng gia đình là một trang sách đẹp trong cuốn truyện cuộc đời con.", note: "Hãy viết nên những trang thật đẹp nhé!" }
+    ]
+  },
+  focus: {
+    icon: '🎯',
+    color: '#118AB2',
+    cardClass: 'topic-focus',
+    quotes: [
+      { text: "Khi con tập trung, con có thể làm được mọi thứ con muốn.", note: "Hít thở sâu và bắt đầu thôi nào, An Nhiên!" },
+      { text: "Mỗi phút tập trung là một bước tiến đến điều tuyệt vời.", note: "Chỉ cần 5 phút chú tâm là con đã làm được nhiều lắm!" },
+      { text: "Tâm trí tập trung như cái kính lúp — nhỏ thôi nhưng làm được điều phi thường.", note: "Ánh sáng nhỏ nhưng tập trung sẽ rất mạnh!" },
+      { text: "Làm xong một việc rồi mới chuyển sang việc khác — đó là bí quyết của người giỏi.", note: "Hết bài tập, rồi mới chơi nhé, An Nhiên!" },
+      { text: "Khi con ngồi học, hãy để đồ chơi nghỉ ngơi một lúc nhé.", note: "Đồ chơi sẽ đợi con — bài học không thể đợi mãi!" },
+      { text: "Tập trung không có nghĩa là nhàm chán — nó có nghĩa là đang làm chủ bản thân.", note: "Con đang lớn lên từng ngày khi biết kiểm soát mình!" },
+      { text: "Khi con lắng nghe cô giáo, con đang đặt viên gạch đầu tiên cho tương lai của mình.", note: "Nghe kỹ, hiểu sâu — con sẽ giỏi thôi!" },
+      { text: "Mỗi lần con cố gắng tập trung, não của con đang trở nên mạnh hơn.", note: "Não cũng cần tập luyện như cơ bắp vậy đó!" },
+      { text: "Hãy chọn một chỗ ngồi yên tĩnh và làm bài — con sẽ ngạc nhiên vì mình làm xong nhanh thế nào.", note: "Môi trường yên tĩnh giúp con học giỏi hơn rất nhiều!" },
+      { text: "Nhìn thẳng vào bài — không nhìn xung quanh — và mọi thứ sẽ sáng tỏ hơn.", note: "Tập trung như thám tử đang giải đố nhé!" },
+      { text: "Con có thể vẽ và hát sau khi hoàn thành bài học — phần thưởng sẽ ngọt ngào hơn!", note: "Làm xong việc cần làm, rồi tận hưởng việc yêu thích!" },
+      { text: "Mỗi câu hỏi con trả lời được là một ngôi sao sáng trong hành trình học tập.", note: "Con đang thu thập thật nhiều ngôi sao rồi đó!" },
+      { text: "Khi thấy khó tập trung, hãy nhắm mắt đếm đến 5 rồi bắt đầu lại.", note: "Reset nhỏ, hiệu quả lớn — thử đi nhé!" },
+      { text: "Làm từng bước một — không cần vội — con sẽ đến đích thôi.", note: "Rùa chậm nhưng kiên trì vẫn về đích trước mà!" },
+      { text: "Học xong bài hôm nay, ngày mai con sẽ tự tin hơn rất nhiều.", note: "Mỗi ngày một chút — con tiến bộ mỗi ngày!" },
+      { text: "Khi con ngồi thẳng lưng và nhìn thẳng, não con cũng sẵn sàng tiếp nhận kiến thức.", note: "Tư thế tốt giúp học tốt hơn đó, An Nhiên!" },
+      { text: "Tập trung là siêu năng lực mà con có thể luyện tập mỗi ngày.", note: "Hôm nay luyện 5 phút — tuần sau sẽ được 10 phút!" },
+      { text: "Khi tâm trí lang thang, hãy nhẹ nhàng kéo nó trở lại — con đang học cách làm chủ bản thân.", note: "Không sao nếu bị phân tâm — quan trọng là biết quay lại!" },
+      { text: "Con hát hay, vẽ đẹp — vì những lúc đó con hoàn toàn tập trung vào điều mình yêu thích!", note: "Học bài cũng có thể vui như vẽ và hát, nếu con thử!" },
+      { text: "Bài tập khó không phải để làm con nản — mà để thấy con giỏi đến đâu!", note: "Thử thách là cơ hội để tỏa sáng!" },
+      { text: "Đặt ra mục tiêu nhỏ: hoàn thành trang này, rồi mới nghỉ ngơi.", note: "Mục tiêu nhỏ + hoàn thành = niềm vui lớn!" },
+      { text: "Người tập trung giỏi không phải thiên tài — họ chỉ kiên trì luyện tập mỗi ngày.", note: "Con hoàn toàn có thể làm được điều này!" },
+      { text: "Khi con lắng nghe cẩn thận, con đang tôn trọng người đang nói chuyện với mình.", note: "Lắng nghe là cách thể hiện sự yêu thương đó!" },
+      { text: "Hãy gạt hết suy nghĩ khác sang một bên — bây giờ chỉ cần tập trung vào việc này thôi.", note: "Một việc tại một thời điểm — đó là bí quyết!" },
+      { text: "Con làm được những bức tranh đẹp vì con tập trung vẽ — học bài cũng vậy thôi!", note: "Mang tinh thần vẽ tranh vào việc học nhé, An Nhiên!" },
+      { text: "Cô giáo giảng mỗi điều có lý do — hãy lắng nghe để hiểu lý do đó.", note: "Tò mò và lắng nghe — bộ đôi hoàn hảo để học giỏi!" },
+      { text: "Khi con chú ý trong lớp, con tiết kiệm thời gian học ở nhà.", note: "Nghe kỹ ở lớp = tối về có nhiều thời gian chơi hơn!" },
+      { text: "Mỗi lần con cố hoàn thành bài dù khó — đó là lúc con mạnh mẽ nhất.", note: "Sức mạnh thật sự không phải ở cơ bắp — mà ở ý chí!" },
+      { text: "Tập trung giúp con hoàn thành bài nhanh hơn để có thêm thời gian vẽ và hát.", note: "Động lực đó có đủ sức giúp con tập trung không?" },
+      { text: "Bí quyết của người thành công: họ làm một việc và làm thật tốt.", note: "Từng bước, từng việc — con đang xây nền móng cho tương lai!" },
+      { text: "Nhìn vào sách giáo khoa như nhìn vào bức tranh đẹp — hãy khám phá từng chi tiết.", note: "Học tập là cuộc khám phá thú vị!" },
+      { text: "Khi con không hiểu, hãy hỏi ngay — đừng để tâm trí trống rỗng mà không làm đầy nó.", note: "Hỏi là cách học nhanh nhất!" },
+      { text: "Mỗi lần con chú ý học xong một bài — cảm giác đó thật tuyệt vời, phải không?", note: "Hãy nhớ cảm giác đó và dùng nó làm động lực!" },
+      { text: "Ngay cả nghệ sĩ vĩ đại cũng cần tập trung để tạo ra kiệt tác — con cũng vậy!", note: "Picasso tập trung từng nét vẽ — An Nhiên cũng làm được!" },
+      { text: "Khi tập trung học tốt hôm nay, ngày mai con sẽ có thể dạy lại cho bạn khác.", note: "Giỏi là để chia sẻ và giúp đỡ bạn bè nhé!" },
+      { text: "Tiếng ồn bên ngoài không thể làm phiền con nếu con quyết tâm tập trung bên trong.", note: "Con có thể tự tạo ra vùng yên tĩnh của riêng mình!" },
+      { text: "Tập trung vào bài học như tập trung vào bài hát yêu thích — con sẽ nhớ lâu hơn!", note: "Học với niềm vui — đó là cách học tốt nhất!" },
+      { text: "Mỗi câu con đọc rõ ràng, mỗi chữ con viết cẩn thận — là bằng chứng con đang tập trung.", note: "Chậm mà chắc — chữ đẹp, bài tốt!" },
+      { text: "Hãy thử thách bản thân: tập trung 10 phút không nhìn xung quanh — con sẽ ngạc nhiên!", note: "Thử ngay hôm nay xem sao nhé!" },
+      { text: "Khi con tập trung học tốt, ba mẹ mỉm cười và tự hào về con lắm!", note: "Nụ cười của ba mẹ là phần thưởng lớn nhất!" },
+      { text: "Não con giống như cơ bắp — càng luyện tập tập trung, càng mạnh mẽ hơn.", note: "Hôm nay luyện thêm một chút nhé, An Nhiên!" },
+      { text: "Khi con hoàn thành bài tập đúng giờ, con đang học cách tôn trọng thời gian.", note: "Thời gian là thứ quý giá — đừng để nó trôi đi lãng phí!" },
+      { text: "Mỗi lần con kiên nhẫn làm xong bài khó, con lớn lên một chút.", note: "Lớn lên không chỉ tính bằng chiều cao, mà bằng sự kiên nhẫn nữa!" },
+      { text: "Tập trung là món quà con tự tặng cho tương lai của mình.", note: "Hôm nay chú tâm học — ngày mai con sẽ cảm ơn bản thân!" },
+      { text: "Bắt đầu thôi — chỉ cần bắt đầu — rồi mọi thứ sẽ dễ hơn.", note: "Khó nhất là lúc bắt đầu. Sau đó mọi thứ sẽ chạy tự nhiên!" },
+      { text: "Con vẽ từng nét cẩn thận — học từng chữ cẩn thận — kết quả đều đẹp như nhau!", note: "Sự tỉ mỉ là đặc điểm của người làm ra những điều tuyệt vời!" },
+      { text: "Khi con tập trung hoàn thành tốt bài học, đó là lúc con yêu thương bản thân mình.", note: "Tự yêu bản thân là làm điều tốt cho chính mình!" },
+      { text: "Đừng để nỗi sợ khó khăn ngăn con bắt đầu — hãy cứ bắt đầu và con sẽ thấy đường đi.", note: "Mỗi bước nhỏ đều đưa con đến gần hơn với đích đến!" },
+      { text: "Ngày hôm nay con học tốt — ngày mai sẽ có thêm nhiều điều tuyệt vời chờ đón con.", note: "Kết quả tốt là phần thưởng cho sự tập trung hôm nay!" },
+      { text: "Khi con ngồi yên và chú ý, cả lớp học cùng nhau tiến bộ.", note: "Con không chỉ học cho mình — con còn giúp cả lớp cùng tiến!" }
+    ]
+  },
+  neat: {
+    icon: '✨',
+    color: '#06D6A0',
+    cardClass: 'topic-neat',
+    quotes: [
+      { text: "Nơi nào gọn gàng, nơi đó tâm trí thảnh thơi.", note: "Dọn dẹp góc học tập — con sẽ học tốt hơn ngay!" },
+      { text: "Đặt đồ vật về đúng chỗ sau khi dùng xong — đó là thói quen của người thông minh.", note: "Mỗi thứ đều có 'ngôi nhà' riêng của nó!" },
+      { text: "Căn phòng gọn gàng là nơi những ý tưởng đẹp được nảy sinh.", note: "Phòng sạch đẹp — tranh vẽ sẽ ra đời từ đó!" },
+      { text: "Hãy xếp quần áo gọn trước khi đi ngủ — sáng mai con sẽ có một khởi đầu thật suôn sẻ.", note: "Chuẩn bị tối hôm trước = buổi sáng bình yên hơn!" },
+      { text: "Bút chì, tẩy, thước — mỗi thứ một chỗ, sẵn sàng khi con cần.", note: "Không phải tìm kiếm — chỉ cần với tay là có ngay!" },
+      { text: "Sách vở xếp ngay ngắn — kiến thức cũng sẽ vào đầu ngăn nắp như vậy.", note: "Bên ngoài gọn gàng, bên trong trật tự — cả hai đều quan trọng!" },
+      { text: "Dọn dẹp không phải hình phạt — đó là cách yêu thương không gian của mình.", note: "Yêu căn phòng của mình — hãy giữ nó sạch đẹp nhé!" },
+      { text: "Khi đồ đạc có trật tự, con tiết kiệm rất nhiều thời gian tìm kiếm.", note: "Ngăn nắp = có thêm thời gian vẽ và hát!" },
+      { text: "Hãy là người bạn tốt của đồ dùng của mình — cất chúng cẩn thận sau khi dùng.", note: "Bút màu được cất đúng chỗ sẽ dùng được lâu hơn!" },
+      { text: "Gọn gàng là thói quen — và thói quen tốt tạo nên người tốt.", note: "Mỗi ngày một bước nhỏ — thói quen đẹp hình thành dần dần!" },
+      { text: "Ba phút dọn dẹp mỗi ngày bằng với một giờ tìm kiếm mỗi tuần.", note: "Một chút cẩn thận hôm nay giúp tiết kiệm rất nhiều sau đó!" },
+      { text: "Khi bàn học sạch và gọn, tâm trí con cũng sẵn sàng học tốt.", note: "Trước khi học — dọn bàn 2 phút đi nhé!" },
+      { text: "Ngăn nắp không cần hoàn hảo — chỉ cần tốt hơn hôm qua một chút là đủ.", note: "Tiến bộ từng ngày — không cần hoàn hảo ngay hôm nay!" },
+      { text: "Hãy lấy thứ gì thì cất thứ đó về đúng chỗ — quy tắc đơn giản của người có trách nhiệm.", note: "Đơn giản thôi — lấy ra rồi cất vào. Không để đó!" },
+      { text: "Khi con gọn gàng, con đang tôn trọng công sức của ba mẹ đã sắp xếp cho con.", note: "Ba mẹ dọn dẹp vì yêu con — con giữ gìn là cách nói cảm ơn!" },
+      { text: "Đôi giày đặt ngay ngắn trước cửa — nhìn thôi đã thấy vui rồi!", note: "Từ đôi giày nhỏ bắt đầu thói quen lớn!" },
+      { text: "Cặp sách được chuẩn bị tối hôm trước — buổi sáng con sẽ không bao giờ quên đồ nữa.", note: "Thử một lần xem — con sẽ thấy ngay sự khác biệt!" },
+      { text: "Bộ đồ ngủ gấp gọn, gối vuông vức — bắt đầu một ngày mới thật sự gọn gàng!", note: "Dọn giường ngay khi thức dậy — thói quen của người thành công!" },
+      { text: "Đồ vật ngăn nắp — tâm trí thư thái — nghệ thuật ra đời từ sự bình yên đó.", note: "Phòng vẽ gọn = cảm hứng sẽ đến nhiều hơn!" },
+      { text: "Khi con tự dọn dẹp, con đang học cách tự lập — một kỹ năng cực kỳ quý giá.", note: "Tự làm được = con đang lớn thật sự rồi!" },
+      { text: "Hãy dọn đồ chơi trước khi lấy đồ chơi mới ra chơi tiếp.", note: "Một bộ trước, rồi mới đến bộ tiếp — nhà mình sẽ không bị ngập đồ!" },
+      { text: "Thùng rác là nơi rác thuộc về — không phải sàn nhà hay góc phòng.", note: "Rác đi đúng chỗ — nhà mình thêm sạch đẹp!" },
+      { text: "Quần áo bẩn vào giỏ, quần áo sạch xếp vào tủ — rất đơn giản nhưng tạo ra sự khác biệt lớn.", note: "Hai việc nhỏ — căn phòng thay đổi hoàn toàn!" },
+      { text: "Người ngăn nắp không cần nhiều thứ — họ biết trân trọng những thứ mình có.", note: "Ít thôi nhưng gọn — tốt hơn nhiều nhưng lộn xộn!" },
+      { text: "Khi con cất bút màu đúng hộp sau khi vẽ, chúng sẽ luôn sẵn sàng khi con cần sáng tạo.", note: "Bút màu được cất gọn = lần sau vẽ sẽ dễ hơn ngay!" },
+      { text: "Một nơi cho mọi thứ, mọi thứ ở đúng nơi của chúng — đây là quy tắc vàng của sự gọn gàng.", note: "Học thuộc quy tắc này, con sẽ không bao giờ mất đồ nữa!" },
+      { text: "Dọn dẹp cùng nhạc vui — gọn gàng trở thành niềm vui thay vì gánh nặng.", note: "Thử bật nhạc và dọn phòng xem sao — vui lắm đó!" },
+      { text: "Khi con gọn gàng, con đang dạy bản thân tính kỷ luật — thứ giúp con thành công sau này.", note: "Gọn gàng hôm nay = tương lai tốt đẹp hơn." },
+      { text: "Không gian sạch sẽ là nơi ý tưởng nghệ thuật của con được bay cao nhất.", note: "Vẽ trong phòng sạch — bức tranh sẽ đẹp hơn bội phần!" },
+      { text: "Hãy kiểm tra góc học tập trước khi đi ngủ — chỉ mất 2 phút thôi.", note: "2 phút tối nay = sáng mai thảnh thơi hoàn toàn!" },
+      { text: "Mỗi lần tự dọn phòng, con đang trở thành phiên bản tốt hơn của chính mình.", note: "Con của ngày mai giỏi hơn con của ngày hôm qua!" },
+      { text: "Ngăn kéo gọn gàng là cánh cửa mở ra những buổi làm bài không có gì cản trở.", note: "Thử dọn ngăn kéo bàn học xem sao nhé!" },
+      { text: "Đặt ba lô đúng chỗ khi về nhà — thói quen nhỏ, lợi ích lớn.", note: "Ba lô luôn ở chỗ cũ = không bao giờ phải tìm lại!" },
+      { text: "Khi con cất gọn đồ đạc, ba mẹ thấy con đang lớn và trưởng thành hơn từng ngày.", note: "Ba mẹ rất vui khi thấy con tự giác dọn dẹp!" },
+      { text: "Gọn gàng không cần nhiều thời gian — chỉ cần tập thói quen đặt đồ đúng chỗ ngay lúc đó.", note: "Ngay lúc đó — không để đó rồi làm sau. Đó là bí quyết!" },
+      { text: "Khi mọi thứ ở đúng chỗ, con có thể tìm được bất cứ thứ gì trong vòng vài giây.", note: "Không mất thứ gì = có thêm thời gian cho điều con yêu thích!" },
+      { text: "Phòng con là phản chiếu của tâm hồn con — hãy làm nó đẹp và ngăn nắp!", note: "Phòng đẹp = tâm hồn đẹp, An Nhiên nhé!" },
+      { text: "Sau mỗi bữa ăn, hãy dọn bát đũa giúp ba mẹ — đó là cách yêu thương và gọn gàng cùng một lúc.", note: "Hai điều tốt trong một hành động nhỏ bé!" },
+      { text: "Vật dụng nào con không dùng nữa, hãy xếp gọn sang một góc — đừng để ngổn ngang khắp nơi.", note: "Chia sẻ hoặc cất gọn — phòng sẽ rộng rãi hơn ngay!" },
+      { text: "Mỗi buổi tối nhìn lại căn phòng gọn gàng của mình — con sẽ ngủ ngon hơn rất nhiều.", note: "Phòng gọn = giấc ngủ ngon. Thật sự đó!" },
+      { text: "Người vẽ giỏi biết cất bút sau khi xong — người học giỏi cũng biết xếp sách sau khi học.", note: "Cả hai đều là người An Nhiên hoàn toàn có thể làm được!" },
+      { text: "Một không gian gọn gàng mời gọi những ý tưởng sáng tạo bước vào.", note: "Dọn phòng xong, ngồi xuống vẽ — cảm hứng sẽ đến ngay!" },
+      { text: "Hãy tự hào về căn phòng của mình — và giữ gìn nó như giữ gìn điều mình trân trọng.", note: "Phòng con là không gian của riêng con — hãy làm nó thật đặc biệt!" },
+      { text: "Đồ vật ngăn nắp bên ngoài giúp suy nghĩ ngăn nắp bên trong — chúng kết nối với nhau thật kỳ diệu.", note: "Gọn ngoài, gọn trong — cả hai đều quan trọng!" },
+      { text: "Mỗi lần con dọn dẹp mà không cần ba mẹ nhắc — đó là khoảnh khắc ba mẹ tự hào nhất!", note: "Tự giác là đặc điểm của những người thực sự trưởng thành!" },
+      { text: "Tủ sách gọn gàng = kho báu tri thức được gìn giữ cẩn thận.", note: "Sách là bạn — hãy đối xử tốt với bạn nhé!" },
+      { text: "Hãy làm bạn với sự gọn gàng từ hôm nay — đó là người bạn đồng hành tốt nhất suốt đời.", note: "Bạn tốt không cần tìm đâu xa — bắt đầu từ thói quen của mình!" },
+      { text: "Khi đồ vật luôn đúng chỗ, con sẽ không bao giờ trễ học vì mất đồ nữa.", note: "Đúng giờ và gọn gàng — hai thói quen tốt đi cùng nhau!" },
+      { text: "Góc nhỏ gọn gàng mỗi ngày tạo nên căn phòng đẹp mỗi tuần.", note: "Không cần dọn cả phòng một lúc — từng góc nhỏ, từng ngày thôi!" },
+      { text: "An Nhiên ngăn nắp và gọn gàng — đó là điều ba mẹ và cô giáo đều yêu thích ở con!", note: "Con có thể làm được điều này — ba mẹ tin tưởng ở con!" }
+    ]
+  }
+};
+
+let currentTopic = 'family';
+let currentIndex = 0;
+let utterance = null;
+let isPlaying = false;
+let autoMode = false;
+let autoTimer = null;
+let speechRate = 0.9;
+let listOpen = false;
+
+// Floating stars
+const starEmojis = ['⭐','✨','🌸','💫','🌟','🎀','🦋','🌈'];
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 20; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.textContent = starEmojis[Math.floor(Math.random() * starEmojis.length)];
+  s.style.left = Math.random() * 100 + '%';
+  s.style.animationDuration = (12 + Math.random() * 18) + 's';
+  s.style.animationDelay = (Math.random() * 20) + 's';
+  s.style.fontSize = (0.8 + Math.random() * 1) + 'rem';
+  starsEl.appendChild(s);
+}
+
+function getQuotes() { return DATA[currentTopic].quotes; }
+
+function render(animate) {
+  const q = getQuotes()[currentIndex];
+  const d = DATA[currentTopic];
+  const total = getQuotes().length;
+
+  if (animate !== false) {
+    const card = document.getElementById('quoteCard');
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = 'slideUp 0.4s cubic-bezier(.34,1.56,.64,1) both';
+  }
+
+  document.getElementById('quoteCard').className = 'quote-card ' + d.cardClass;
+  document.getElementById('quoteIcon').textContent = d.icon;
+  document.getElementById('quoteNumber').textContent = `CÂU ${currentIndex + 1} / ${total}`;
+  document.getElementById('quoteText').textContent = q.text;
+  document.getElementById('quoteNote').textContent = q.note;
+
+  const pct = ((currentIndex + 1) / total * 100).toFixed(1);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${currentIndex + 1} / ${total}`;
+
+  // Update list
+  document.querySelectorAll('.list-item').forEach((el, i) => {
+    el.classList.toggle('active', i === currentIndex);
+    if (i === currentIndex) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+}
+
+function switchTopic(topic) {
+  stopSpeech();
+  currentTopic = topic;
+  currentIndex = 0;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.topic === topic));
+  buildList();
+  render();
+  if (listOpen) {
+    document.getElementById('quoteList').classList.add('open');
+  }
+}
+
+function buildList() {
+  const list = document.getElementById('quoteList');
+  list.innerHTML = '';
+  getQuotes().forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'list-item' + (i === currentIndex ? ' active' : '');
+    div.innerHTML = `<span class="list-num">${i + 1}.</span><span>${q.text}</span>`;
+    div.onclick = () => { currentIndex = i; render(); speak(); };
+    list.appendChild(div);
+  });
+}
+
+function speak() {
+  stopSpeech();
+  const q = getQuotes()[currentIndex];
+  const fullText = q.text + '. ' + q.note;
+  utterance = new SpeechSynthesisUtterance(fullText);
+  utterance.lang = 'vi-VN';
+  utterance.rate = speechRate;
+  utterance.pitch = 1.1;
+
+  // Try to pick a female Vietnamese voice
+  const voices = speechSynthesis.getVoices();
+  const viVoice = voices.find(v => v.lang.startsWith('vi') && v.name.toLowerCase().includes('female'))
+    || voices.find(v => v.lang.startsWith('vi'))
+    || voices.find(v => v.lang === 'vi-VN');
+  if (viVoice) utterance.voice = viVoice;
+
+  utterance.onstart = () => {
+    isPlaying = true;
+    document.getElementById('btnPlay').textContent = '⏹ Dừng';
+    document.getElementById('btnPlay').classList.add('playing');
+    document.getElementById('wave').classList.add('show');
+  };
+  utterance.onend = () => {
+    isPlaying = false;
+    document.getElementById('btnPlay').textContent = '▶ Đọc Câu Này';
+    document.getElementById('btnPlay').classList.remove('playing');
+    document.getElementById('wave').classList.remove('show');
+    if (autoMode) {
+      autoTimer = setTimeout(() => {
+        if (currentIndex < getQuotes().length - 1) {
+          currentIndex++;
+          render();
+          speak();
+        } else {
+          autoMode = false;
+          document.getElementById('btnAuto').classList.remove('on');
+          document.getElementById('btnAuto').textContent = '🔄 Tự động chuyển';
+        }
+      }, 1200);
+    }
+  };
+  utterance.onerror = () => {
+    isPlaying = false;
+    document.getElementById('btnPlay').textContent = '▶ Đọc Câu Này';
+    document.getElementById('btnPlay').classList.remove('playing');
+    document.getElementById('wave').classList.remove('show');
+  };
+  speechSynthesis.speak(utterance);
+}
+
+function stopSpeech() {
+  speechSynthesis.cancel();
+  if (autoTimer) clearTimeout(autoTimer);
+  isPlaying = false;
+  document.getElementById('btnPlay').textContent = '▶ Đọc Câu Này';
+  document.getElementById('btnPlay').classList.remove('playing');
+  document.getElementById('wave').classList.remove('show');
+}
+
+function togglePlay() {
+  if (isPlaying) { stopSpeech(); }
+  else { speak(); }
+}
+
+function nextQuote() {
+  stopSpeech();
+  if (currentIndex < getQuotes().length - 1) currentIndex++;
+  render();
+}
+
+function prevQuote() {
+  stopSpeech();
+  if (currentIndex > 0) currentIndex--;
+  render();
+}
+
+function toggleAuto() {
+  autoMode = !autoMode;
+  const btn = document.getElementById('btnAuto');
+  if (autoMode) {
+    btn.classList.add('on');
+    btn.textContent = '⏹ Tắt tự động';
+    if (!isPlaying) speak();
+  } else {
+    btn.classList.remove('on');
+    btn.textContent = '🔄 Tự động chuyển';
+    stopSpeech();
+  }
+}
+
+function setSpeed(rate) {
+  speechRate = rate;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  const labels = { 0.75: 'Chậm', 0.9: 'Vừa', 1.1: 'Nhanh' };
+  document.querySelectorAll('.speed-btn').forEach(b => {
+    if (b.textContent === labels[rate]) b.classList.add('active');
+  });
+  if (isPlaying) speak();
+}
+
+function toggleList() {
+  listOpen = !listOpen;
+  document.getElementById('quoteList').classList.toggle('open', listOpen);
+}
+
+// Init
+speechSynthesis.onvoiceschanged = () => {};
+buildList();
+render(false);
+</script>
+</body>
+</html>
